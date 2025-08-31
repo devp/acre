@@ -1,0 +1,3 @@
+- Jira ticket descriptions
+- semantic grouping
+- line-by-line deep dives
