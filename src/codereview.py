@@ -81,8 +81,6 @@ def load_state(pr_key):
 
 
 def save_state(state, pr_key):
-    print(pr_key)
-    print(state_file(pr_key))
     with open(state_file(pr_key), "w") as fh:
         json.dump(state, fh)
 
