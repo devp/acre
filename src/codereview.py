@@ -238,10 +238,11 @@ def _interactive_session(paths, pr_key):
         "rs": lambda ids: review_files(ids, "skim"),
         "rd": lambda ids: review_files(ids, "deep"),
         "ls": lambda ids: list_all(),
-        "lsu": lambda ids: list_unreviewed(),
+        "todo": lambda ids: list_unreviewed(),
+        "td": lambda ids: list_unreviewed(),
     }
 
-    print("commands: p <ids>, rs <ids>, rd <ids>, ls, lsu, empty line to exit")
+    print("commands: p <ids>, rs <ids>, rd <ids>, ls, todo/td, empty line to exit")
     while True:
         try:
             entry = input("> ").strip()
