@@ -144,10 +144,11 @@ def cmd_overview(config, interactive=False):
         state["files"][path] = {"lines": lines, "reviewed": False}
         state["total_lines"] += lines
         paths.append(path)
+        mark = "\u2705 " if reviewed else ""
         if interactive:
-            print(f"{idx}. {path:25} +{lines}")
+            print(f"{idx}. {mark}{path:25} +{lines}")
         else:
-            print(f"- {path:25} +{lines}")
+            print(f"- {mark}{path:25} +{lines}")
     save_state(state, pr_key)
     print(f"\n\U0001F9AE Total: {len(files)} files, {state['total_lines']} changed lines")
 
