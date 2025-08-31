@@ -133,13 +133,15 @@ def cmd_overview(config, interactive=False):
     if body:
         print(f"> {body}")
     files = data.get("files") or []
+    previous = load_state(pr_key) or {"files": {}}
     state = {"files": {}, "total_lines": 0}
     print("\n\U0001F4C1 File Summary:")
     paths = []
     for idx, f in enumerate(files, 1):
         path = f.get("path")
         lines = f.get("additions", 0) + f.get("deletions", 0)
-        state["files"][path] = {"lines": lines, "reviewed": False}
+        reviewed = previous["files"].get(path, {}).get("reviewed", False)
+        state["files"][path] = {"lines": lines, "reviewed": reviewed}
         state["total_lines"] += lines
         paths.append(path)
         mark = "\u2705 " if reviewed else ""
