@@ -251,7 +251,11 @@ def _interactive_session(paths, pr_key):
             break
         if not entry:
             break
-        cmd, *ids = entry.split()
+        parts = entry.split()
+        if all(p.isdigit() for p in parts):
+            cmd, ids = "rs", parts
+        else:
+            cmd, *ids = parts
         fn = cmds.get(cmd)
         if not fn:
             print("unknown command")
