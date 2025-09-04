@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-import argparse
 import json
 import os
 import re
 import shlex
 import subprocess
 import sys
+
+from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
 
 
 def repo_root():
@@ -277,29 +278,20 @@ def main():
         expanded = shlex.split(aliases[sys.argv[1]])
         sys.argv = [sys.argv[0]] + expanded + sys.argv[2:]
 
-    p = argparse.ArgumentParser()
-    sub = p.add_subparsers(dest="cmd")
-    over = sub.add_parser("overview")
-    over.add_argument("-i", "--interactive", action="store_true")
-    sub.add_parser("status")
-    sub.add_parser("reset")
-    r = sub.add_parser("review")
-    r.add_argument("file")
-    g = r.add_mutually_exclusive_group()
-    g.add_argument("--skim", action="store_true")
-    g.add_argument("--deep", action="store_true")
-    args = p.parse_args()
-    if args.cmd == "overview":
-        cmd_overview(config, args.interactive)
-    elif args.cmd == "status":
-        cmd_status(current_pr_key())
-    elif args.cmd == "reset":
-        cmd_reset(current_pr_key())
-    elif args.cmd == "review":
-        mode = "deep" if args.deep else "skim"
-        cmd_review(args.file, mode, current_pr_key())
-    else:
-        p.print_help()
+    instruction = parse_args_from_cli()
+    if instruction:
+        match instruction.command:
+            case Commands.OVERVIEW:
+                is_interactive = CommandOptions.INTERACTIVE in instruction.options
+                return cmd_overview(config, is_interactive)
+            case Commands.STATUS:
+                return cmd_status(current_pr_key())
+            case Commands.RESET:
+                return cmd_reset(current_pr_key())
+            case Commands.REVIEW:
+                mode = "deep" if CommandOptions.REVIEW_DEEP in instruction.options else "skim"
+                return cmd_review(instruction.filePath, mode, current_pr_key())
+    print_usage()
 
 
 if __name__ == "__main__":
