@@ -6,3 +6,9 @@ acre = augmented code review excellence
 
 - LLM usage in development
 - storing state in dot-git folder
+
+## Requirements
+
+### Development
+
+- justfile
