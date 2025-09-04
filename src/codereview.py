@@ -32,7 +32,7 @@ def current_pr_key():
             capture_output=True,
             text=True,
         )
-        repo = subprocess.run(
+        subprocess.run(
             ["git", "config", "--get", "remote.origin.url"],
             check=True,
             capture_output=True,
@@ -220,13 +220,13 @@ def _interactive_session(paths, pr_key):
                 approved_here.append(path)
         return approved_here
 
-    def list_all(_ids=None):
+    def list_all():
         state = load_state(pr_key) or {"files": {}}
         for idx, path in enumerate(paths, 1):
             lines = state["files"].get(path, {}).get("lines", 0)
             print(f"{idx}. {path:25} +{lines}")
 
-    def list_unreviewed(_ids=None):
+    def list_unreviewed():
         state = load_state(pr_key) or {"files": {}}
         for idx, path in enumerate(paths, 1):
             if not state["files"].get(path, {}).get("reviewed"):
@@ -238,9 +238,9 @@ def _interactive_session(paths, pr_key):
         "print": print_files,
         "rs": lambda ids: review_files(ids, "skim"),
         "rd": lambda ids: review_files(ids, "deep"),
-        "ls": lambda ids: list_all(),
-        "todo": lambda ids: list_unreviewed(),
-        "td": lambda ids: list_unreviewed(),
+        "ls": list_all,
+        "todo": list_unreviewed,
+        "td": list_unreviewed,
     }
 
     print("commands: p <ids>, rs <ids>, rd <ids>, ls, todo/td, empty line to exit")
