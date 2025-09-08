@@ -1,4 +1,4 @@
-from lib.cli import CommandOptions, Commands, parse_args_from_cli
+from cli import CommandOptions, Commands, parse_args_from_cli
 
 def test_parse_overview():
     v = parse_args_from_cli(["overview"])
