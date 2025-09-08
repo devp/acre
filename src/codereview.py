@@ -13,18 +13,6 @@ from lib.sources.github import data_from_gh
 from lib.state import StateManager
 
 
-def repo_root():
-    try:
-        res = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        return res.stdout.strip()
-    except subprocess.CalledProcessError:
-        return os.getcwd()
-
 CONFIG_FILE = os.path.expanduser("~/.config/codereview.json")
 
 
@@ -163,8 +151,7 @@ def _interactive_session(paths, key):
     def print_files(ids):
         for i in valid_ids(ids):
             path = paths[int(i) - 1]
-            full_path = os.path.join(repo_root(), path)
-            print(f"== {full_path} ==")
+            print(f"== {path} ==")
 
     def review_files(ids, mode):
         approved_here = []
