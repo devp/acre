@@ -8,8 +8,8 @@ import sys
 
 from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
 from lib.initialize import cmd_init
+from lib.review_identifier import ReviewIdentifier
 from lib.state import StateManager
-from lib.models import ReviewState, FileState
 
 
 def repo_root():
@@ -27,31 +27,8 @@ def repo_root():
 CONFIG_FILE = os.path.expanduser("~/.config/codereview.json")
 
 
-def current_pr_key():
-    try:
-        pr = subprocess.run(
-            ["gh", "pr", "view", "--json", "number"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        subprocess.run(
-            ["git", "config", "--get", "remote.origin.url"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError:
-        print("unable to determine current PR")
-        sys.exit(1)
-    number = json.loads(pr.stdout).get("number")
-    return str(number)
-
-
-def state_file(pr_key):
-    base = os.path.join(repo_root(), ".git", "codereview_state")
-    os.makedirs(base, exist_ok=True)
-    return os.path.join(base, f"{pr_key}.json")
+def current_key():
+    return ReviewIdentifier.determine_review_id()
 
 
 def load_config():
@@ -73,20 +50,16 @@ def yn(prompt, default=False):
     return ans == "y"
 
 
-def load_state(pr_key):
-    path = state_file(pr_key)
-    if os.path.exists(path):
-        with open(path) as fh:
-            return json.load(fh)
-    if yn("No state file. Run overview?"):
-        cmd_overview(load_config())
-        return load_state(pr_key)
-    return None
+def load_state(key):
+    state = StateManager().load_state(key)
+    if not state:
+        print("No state file: run init first")
+        exit(1)
+    return state
 
 
-def save_state(state, pr_key):
-    with open(state_file(pr_key), "w") as fh:
-        json.dump(state, fh)
+def save_state(state):
+    StateManager().save_state(state)
 
 
 def run_review_cmd(path):
@@ -111,10 +84,11 @@ def gh_view():
             capture_output=True,
             text=True,
         )
+        return json.loads(res.stdout)
     except subprocess.CalledProcessError:
         print("gh pr view failed; ensure you're on a PR branch")
+        print("TODO: make this robust for other branches and other info sources")
         sys.exit(1)
-    return json.loads(res.stdout)
 
 
 def find_jira(text):
@@ -123,10 +97,10 @@ def find_jira(text):
 
 
 def cmd_overview(config, interactive=False):
-    pr_key = current_pr_key()
-    data = gh_view()
+    key = current_key()
+    data = gh_view() or {}
     title = data.get("title", "").strip()
-    body = data.get("body").strip() or ""
+    body = data.get("body", "").strip() or ""
     print(f"\U0001F4CC PR Summary: {title}")
     jira = find_jira("\n".join([title, body]))
     jira_base = config.get("jira", {}).get("base")
@@ -136,71 +110,63 @@ def cmd_overview(config, interactive=False):
         print(f"\U0001F517 Jira: {jira}")
     if body:
         print(f"> {body}")
-    files = data.get("files") or []
-    previous = load_state(pr_key) or {"files": {}}
-    state = {"files": {}, "total_lines": 0}
+    files = data.get("files", [])
+    changed_lines_total = 0
+    state = load_state(key)
     print("\n\U0001F4C1 File Summary:")
     paths = []
     for idx, f in enumerate(files, 1):
         path = f.get("path")
         lines = f.get("additions", 0) + f.get("deletions", 0)
-        reviewed = previous["files"].get(path, {}).get("reviewed", False)
-        state["files"][path] = {"lines": lines, "reviewed": reviewed}
-        state["total_lines"] += lines
+        reviewed = state.is_file_reviewed(path)
+        changed_lines_total += lines
         paths.append(path)
         mark = "\u2705 " if reviewed else ""
         if interactive:
             print(f"{idx}. {mark}{path:25} +{lines}")
         else:
             print(f"- {mark}{path:25} +{lines}")
-    save_state(state, pr_key)
-    print(f"\n\U0001F9AE Total: {len(files)} files, {state['total_lines']} changed lines")
-
+    print(f"\n\U0001F9AE Total: {len(files)} files, {changed_lines_total} changed lines")
     if interactive:
-        _interactive_session(paths, pr_key)
+        _interactive_session(paths, key)
 
 
-def cmd_status(pr_key):
-    state = load_state(pr_key)
-    if not state:
-        print("No state. Run 'codereview overview' first.")
-        return
-    total = state["total_lines"]
-    reviewed = sum(f["lines"] for f in state["files"].values() if f["reviewed"])
+def cmd_status():
+    key = current_key()
+    state = load_state(key)
+    total = state.total_lines()
+    reviewed = state.total_reviewed_lines()
     remaining = total - reviewed
-    pct = int((reviewed / total) * 100) if total else 100
-    files_left = sum(1 for f in state["files"].values() if not f["reviewed"])
+    pct = int((reviewed / total) * 100) if total else (100 if reviewed else 0)
+    num_files = len(state.files)
+    num_files_reviewed = len(state.reviewed_files())
+    files_left = num_files - num_files_reviewed
     print(f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched")
 
 
-def cmd_review(path, mode, pr_key):
-    state = load_state(pr_key)
+def cmd_review(path, mode, key):
+    state = load_state(key)
     if not state or path not in state["files"]:
         print("Unknown file. Run 'codereview overview' first.")
         return False
-    if state["files"][path]["reviewed"]:
+    if state.is_file_reviewed(path):
         print(f"{path} already reviewed")
         return False
     run_review_cmd(path)
     if not yn("Mark reviewed?"):
         return False
-    state["files"][path]["reviewed"] = True
-    save_state(state, pr_key)
-    lines = state["files"][path]["lines"]
+    StateManager().mark_file_reviewed(state, path)
+    save_state(state)
+    lines = state.lines_of_file(path)
     print(f"> Marked {lines} lines as reviewed ({mode} mode)")
     return True
 
 
-def cmd_reset(pr_key):
-    path = state_file(pr_key)
-    if os.path.exists(path):
-        os.remove(path)
-        print("Reset review progress")
-    else:
-        print("No state to reset")
+def cmd_reset(*_):
+    raise Exception("Not implemented; delete the file manually")  # TODO
 
 
-def _interactive_session(paths, pr_key):
+def _interactive_session(paths, key):
     approved = []
     def valid_ids(ids):
         for i in (ids or []):
@@ -219,21 +185,21 @@ def _interactive_session(paths, pr_key):
         approved_here = []
         for i in valid_ids(ids):
             path = paths[int(i) - 1]
-            if cmd_review(path, mode, pr_key):
+            if cmd_review(path, mode, key):
                 approved_here.append(path)
         return approved_here
 
     def list_all():
-        state = load_state(pr_key) or {"files": {}}
+        state = load_state(key) or {"files": {}}
         for idx, path in enumerate(paths, 1):
-            lines = state["files"].get(path, {}).get("lines", 0)
+            lines = state.lines_of_file(path)
             print(f"{idx}. {path:25} +{lines}")
 
     def list_unreviewed():
-        state = load_state(pr_key) or {"files": {}}
+        state = load_state(key) or {"files": {}}
         for idx, path in enumerate(paths, 1):
-            if not state["files"].get(path, {}).get("reviewed"):
-                lines = state["files"].get(path, {}).get("lines", 0)
+            if not state.is_file_reviewed(path):
+                lines = state.lines_of_file(path)
                 print(f"{idx}. {path:25} +{lines}")
 
     cmds = {
@@ -267,7 +233,7 @@ def _interactive_session(paths, pr_key):
             res = fn(ids)
             if res:
                 approved.extend(res)
-        cmd_status(pr_key)
+        cmd_status()
     if approved:
         print("\nApproved in this session:")
         for pth in approved:
@@ -291,12 +257,12 @@ def main():
                 is_interactive = CommandOptions.INTERACTIVE in instruction.options
                 return cmd_overview(config, is_interactive)
             case Commands.STATUS:
-                return cmd_status(current_pr_key())
+                return cmd_status()
             case Commands.RESET:
-                return cmd_reset(current_pr_key())
+                return cmd_reset()
             case Commands.REVIEW:
                 mode = "deep" if CommandOptions.REVIEW_DEEP in instruction.options else "skim"
-                return cmd_review(instruction.filePath, mode, current_pr_key())
+                return cmd_review(instruction.filePath, mode, current_key())
     print_usage()
 
 
