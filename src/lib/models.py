@@ -14,6 +14,7 @@ class FileState:
     preapproved_sha: Optional[str] = None
     preapproved_blocks: List[PreApprovalBlock] = field(default_factory=list)
     notes: Optional[str] = None
+    lines: int = 0  # Number of changed lines (additions + deletions)
 
 
 @dataclass

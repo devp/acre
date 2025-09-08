@@ -61,7 +61,8 @@ class StateManager:
                         }
                         for block in file_state.preapproved_blocks
                     ],
-                    "notes": file_state.notes
+                    "notes": file_state.notes,
+                    "lines": file_state.lines
                 }
                 for path, file_state in state.files.items()
             },
@@ -97,7 +98,8 @@ class StateManager:
                 approved_sha=file_data.get("approved_sha"),
                 preapproved_sha=file_data.get("preapproved_sha"),
                 preapproved_blocks=preapproved_blocks,
-                notes=file_data.get("notes", "")
+                notes=file_data.get("notes", ""),
+                lines=file_data.get("lines", 0)
             )
         
         return ReviewState(
