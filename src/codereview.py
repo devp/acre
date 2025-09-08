@@ -8,6 +8,8 @@ import sys
 
 from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
 from lib.initialize import cmd_init
+from lib.state import StateManager
+from lib.models import ReviewState, FileState
 
 
 def repo_root():

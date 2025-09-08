@@ -124,3 +124,9 @@ class StateManager:
         
         self.save_state(state)
         return state
+
+    def mark_file_reviewed(self, state: ReviewState, path: str):
+        f = state.files[path]
+        if f is None:
+            raise Exception(f"Not found for approval: {f}")
+        f.approved_sha = self._get_current_commit_sha()

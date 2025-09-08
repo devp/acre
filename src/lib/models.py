@@ -24,3 +24,28 @@ class ReviewState:
     files: Dict[str, FileState] = field(default_factory=dict)
     notes: Optional[str] = None
     metadata: Dict[str, str] = field(default_factory=dict)
+
+    def total_lines(self):
+        return sum([f.lines for f in self.files.values()])
+
+    def total_reviewed_lines(self):
+        return sum([f.lines for f in self.files.values() if f.approved_sha])
+
+    def reviewed_files(self) -> Dict[str, FileState]:
+        return {k: f for (k, f) in self.files.items() if f.approved_sha}
+
+    def lines_of_file(self, file_name: str) -> int | None:
+        f = self.files.get(file_name)
+        return f.lines if f is not None else None
+
+    def is_file_reviewed(self, file_name: str) -> bool | None:
+        f = self.files.get(file_name)
+        return bool(f.approved_sha) if f is not None else None
+
+    def __getitem__(self, key):
+        """Primarily for legacy support."""
+        match key:
+            case 'total_lines':
+                return self.total_lines()
+            case 'files':
+                return self.files
