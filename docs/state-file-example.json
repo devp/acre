@@ -1,0 +1,63 @@
+{
+  "review_id": "pr-123",
+  "init_commit_sha": "abc123def456789abcdef123456789abcdef1234",
+  "files": {
+    "src/main.py": {
+      "approved_sha": "def456789abcdef123456789abcdef123456789a",
+      "preapproved_sha": "789abcdef123456789abcdef123456789abcdef12",
+      "preapproved_blocks": [
+        {
+          "start_line": 10,
+          "end_line": 25,
+          "notes": "Simple refactoring - moved existing function to utils"
+        },
+        {
+          "start_line": 45,
+          "end_line": 60,
+          "notes": "Type annotations added, no logic changes"
+        }
+      ],
+      "notes": "Main application logic - reviewed thoroughly for security concerns"
+    },
+    "src/utils.py": {
+      "approved_sha": null,
+      "preapproved_sha": "456789abcdef123456789abcdef123456789abcde",
+      "preapproved_blocks": [
+        {
+          "start_line": 1,
+          "end_line": 15,
+          "notes": "Helper functions extracted from main.py - pre-approved as simple move"
+        }
+      ],
+      "notes": "New utility module - needs full review for public API design"
+    },
+    "tests/test_main.py": {
+      "approved_sha": "123456789abcdef123456789abcdef123456789ab",
+      "preapproved_sha": null,
+      "preapproved_blocks": [],
+      "notes": "Test coverage looks good - approved after minor fixes"
+    },
+    "README.md": {
+      "approved_sha": null,
+      "preapproved_sha": null,
+      "preapproved_blocks": [
+        {
+          "start_line": 20,
+          "end_line": 35,
+          "notes": "Documentation update - straightforward addition"
+        }
+      ],
+      "notes": "Documentation updates pending final review"
+    }
+  },
+  "notes": "Feature PR for user authentication system. Needs security review for auth flow. Performance looks good in testing. Ready for final approval pending resolution of minor issues in utils.py.",
+  "metadata": {
+    "reviewer": "dev.reviewer@company.com",
+    "security_review_required": "true",
+    "jira_ticket": "AUTH-456",
+    "created_date": "2024-01-15T10:30:00Z",
+    "last_updated": "2024-01-16T14:22:30Z",
+    "priority": "high",
+    "estimated_review_time": "4h"
+  }
+}
