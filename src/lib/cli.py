@@ -45,8 +45,11 @@ def parse_args_from_cli(override_args=None) -> Optional[CommandInstruction]:
     args: argparse.Namespace = _ArgParser.parse_args(args=override_args)
     match args.cmd:
         case "overview":
-            return CommandInstruction(command=Commands.OVERVIEW)
-        case "reset":
+            return CommandInstruction(
+                command=Commands.OVERVIEW,
+                options=[CommandOptions.INTERACTIVE] if args.interactive else []
+            )
+        case "status":
             return CommandInstruction(command=Commands.STATUS)
         case "reset":
             return CommandInstruction(command=Commands.RESET)
