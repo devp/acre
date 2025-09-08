@@ -126,7 +126,7 @@ class StateManager:
         return state
 
 
-def cmd_init(review_id: Optional[str] = None) -> None:
+def cmd_init(review_id: Optional[str] = None, force: bool = False) -> None:
     """Initialize a new code review session"""
     try:
         state_manager = StateManager()
@@ -134,12 +134,13 @@ def cmd_init(review_id: Optional[str] = None) -> None:
         if not review_id:
             review_id = ReviewIdentifier.determine_review_id()
         
-        # Check if review already exists
-        existing_state = state_manager.load_state(review_id)
-        if existing_state:
-            print(f"Review '{review_id}' already exists")
-            print(f"Initialized at commit: {existing_state.init_commit_sha}")
-            return
+        if not force:
+            # Check if review already exists
+            existing_state = state_manager.load_state(review_id)
+            if existing_state:
+                print(f"Review '{review_id}' already exists")
+                print(f"Initialized at commit: {existing_state.init_commit_sha}")
+                return
         
         # Initialize new review
         state = state_manager.initialize_review(review_id)

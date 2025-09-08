@@ -15,6 +15,7 @@ class CommandOptions(Enum):
     REVIEW_SKIM = "review-skim"
     REVIEW_DEEP = "review-deep"
     INTERACTIVE = "interactive"
+    INIT_FORCE = "init-force"
 
 @dataclass
 class CommandInstruction:
@@ -29,6 +30,7 @@ def _build_argparse():
     sub = p.add_subparsers(dest="cmd")
     init = sub.add_parser("init", help="Initialize a new code review session")
     init.add_argument("--review-id", help="Custom review identifier")
+    init.add_argument("--force", help="Overwrite existing state file", action="store_true")
     over = sub.add_parser("overview")
     over.add_argument("-i", "--interactive", action="store_true")
     sub.add_parser("status")
@@ -51,7 +53,8 @@ def parse_args_from_cli(override_args=None) -> Optional[CommandInstruction]:
         case "init":
             return CommandInstruction(
                 command=Commands.INIT,
-                reviewId=getattr(args, 'review_id', None)
+                reviewId=getattr(args, 'review_id', None),
+                options=[CommandOptions.INIT_FORCE] if args.force else []
             )
         case "overview":
             return CommandInstruction(

@@ -283,7 +283,8 @@ def main():
     if instruction:
         match instruction.command:
             case Commands.INIT:
-                return cmd_init(instruction.reviewId)
+                is_force = CommandOptions.INIT_FORCE in instruction.options
+                return cmd_init(review_id=instruction.reviewId, force=is_force)
             case Commands.OVERVIEW:
                 is_interactive = CommandOptions.INTERACTIVE in instruction.options
                 return cmd_overview(config, is_interactive)
