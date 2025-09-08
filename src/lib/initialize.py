@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 class PreApprovalBlock:
     start_line: int
     end_line: int
-    notes: str = ""
+    notes: Optional[str] = None
 
 
 @dataclass
@@ -18,7 +18,7 @@ class FileState:
     approved_sha: Optional[str] = None
     preapproved_sha: Optional[str] = None
     preapproved_blocks: List[PreApprovalBlock] = field(default_factory=list)
-    notes: str = ""
+    notes: Optional[str] = None
 
 
 @dataclass
@@ -26,7 +26,7 @@ class ReviewState:
     review_id: str
     init_commit_sha: str
     files: Dict[str, FileState] = field(default_factory=dict)
-    notes: str = ""
+    notes: Optional[str] = None
     metadata: Dict[str, str] = field(default_factory=dict)
 
 
