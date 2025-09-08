@@ -162,8 +162,10 @@ def cmd_review(path, mode, key):
     return True
 
 
-def cmd_reset(*_):
-    raise Exception("Not implemented; delete the file manually")  # TODO
+def cmd_reset():
+    key = current_key()
+    state = load_state(key)
+    StateManager().do_reset(state)
 
 
 def _interactive_session(paths, key):

@@ -125,6 +125,10 @@ class StateManager:
         self.save_state(state)
         return state
 
+    def do_reset(self, state: ReviewState):
+        for k in state.files.keys():
+            state.files[k].do_reset()
+
     def mark_file_reviewed(self, state: ReviewState, path: str):
         f = state.files[path]
         if f is None:

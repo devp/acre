@@ -16,6 +16,13 @@ class FileState:
     notes: Optional[str] = None
     lines: int = 0  # Number of changed lines (additions + deletions)
 
+    def do_reset(self):
+        self.approved_sha = None
+        self.preapproved_sha = None
+        self.preapproved_blocks = []
+        self.notes = None
+        self.lines = 0
+
 
 @dataclass
 class ReviewState:
