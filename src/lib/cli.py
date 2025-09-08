@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 
 class Commands(Enum):
+    INIT = "init"
     OVERVIEW = "overview",
     STATUS = "status"
     RESET = "reset"
@@ -20,11 +21,14 @@ class CommandInstruction:
     command: Commands
     options: List[CommandOptions] = field(default_factory=list)
     filePath: str | None = None
+    reviewId: str | None = None
 
 
 def _build_argparse():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd")
+    init = sub.add_parser("init", help="Initialize a new code review session")
+    init.add_argument("--review-id", help="Custom review identifier")
     over = sub.add_parser("overview")
     over.add_argument("-i", "--interactive", action="store_true")
     sub.add_parser("status")
@@ -44,6 +48,11 @@ def print_usage():
 def parse_args_from_cli(override_args=None) -> Optional[CommandInstruction]:
     args: argparse.Namespace = _ArgParser.parse_args(args=override_args)
     match args.cmd:
+        case "init":
+            return CommandInstruction(
+                command=Commands.INIT,
+                reviewId=getattr(args, 'review_id', None)
+            )
         case "overview":
             return CommandInstruction(
                 command=Commands.OVERVIEW,

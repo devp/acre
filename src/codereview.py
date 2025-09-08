@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
+from lib.initialize import cmd_init
 
 
 def repo_root():
@@ -281,6 +282,8 @@ def main():
     instruction = parse_args_from_cli()
     if instruction:
         match instruction.command:
+            case Commands.INIT:
+                return cmd_init(instruction.reviewId)
             case Commands.OVERVIEW:
                 is_interactive = CommandOptions.INTERACTIVE in instruction.options
                 return cmd_overview(config, is_interactive)
