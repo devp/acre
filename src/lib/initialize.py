@@ -2,34 +2,10 @@ import json
 import os
 import subprocess
 import sys
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Optional
 
+from lib.models import FileState, PreApprovalBlock, ReviewState
 from lib.review_identifier import ReviewIdentifier
-
-
-@dataclass
-class PreApprovalBlock:
-    start_line: int
-    end_line: int
-    notes: Optional[str] = None
-
-
-@dataclass
-class FileState:
-    approved_sha: Optional[str] = None
-    preapproved_sha: Optional[str] = None
-    preapproved_blocks: List[PreApprovalBlock] = field(default_factory=list)
-    notes: Optional[str] = None
-
-
-@dataclass
-class ReviewState:
-    review_id: str
-    init_commit_sha: str
-    files: Dict[str, FileState] = field(default_factory=dict)
-    notes: Optional[str] = None
-    metadata: Dict[str, str] = field(default_factory=dict)
 
 
 class StateManager:
