@@ -9,6 +9,7 @@ import sys
 from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
 from lib.initialize import cmd_init
 from lib.review_identifier import ReviewIdentifier
+from lib.sources.github import data_from_gh
 from lib.state import StateManager
 
 
@@ -76,21 +77,6 @@ def run_review_cmd(path):
     subprocess.run(args)
 
 
-def gh_view():
-    try:
-        res = subprocess.run(
-            ["gh", "pr", "view", "--json", "title,body,files"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        return json.loads(res.stdout)
-    except subprocess.CalledProcessError:
-        print("gh pr view failed; ensure you're on a PR branch")
-        print("TODO: make this robust for other branches and other info sources")
-        sys.exit(1)
-
-
 def find_jira(text):
     m = re.search(r"[A-Z][A-Z0-9]+-\d+", text or "")
     return m.group(0) if m else None
@@ -98,9 +84,10 @@ def find_jira(text):
 
 def cmd_overview(config, interactive=False):
     key = current_key()
-    data = gh_view() or {}
-    title = data.get("title", "").strip()
-    body = data.get("body", "").strip() or ""
+    data = data_from_gh()
+    title = data.title or ""
+    body = data.body or ""
+    files = data.files
     print(f"\U0001F4CC PR Summary: {title}")
     jira = find_jira("\n".join([title, body]))
     jira_base = config.get("jira", {}).get("base")
@@ -110,17 +97,13 @@ def cmd_overview(config, interactive=False):
         print(f"\U0001F517 Jira: {jira}")
     if body:
         print(f"> {body}")
-    files = data.get("files", [])
     changed_lines_total = 0
     state = load_state(key)
     print("\n\U0001F4C1 File Summary:")
-    paths = []
-    for idx, f in enumerate(files, 1):
-        path = f.get("path")
-        lines = f.get("additions", 0) + f.get("deletions", 0)
+    for idx, path in enumerate(files, 1):
         reviewed = state.is_file_reviewed(path)
+        lines = data.lines_changed.get(path, 0)
         changed_lines_total += lines
-        paths.append(path)
         mark = "\u2705 " if reviewed else ""
         if interactive:
             print(f"{idx}. {mark}{path:25} +{lines}")
@@ -128,7 +111,7 @@ def cmd_overview(config, interactive=False):
             print(f"- {mark}{path:25} +{lines}")
     print(f"\n\U0001F9AE Total: {len(files)} files, {changed_lines_total} changed lines")
     if interactive:
-        _interactive_session(paths, key)
+        _interactive_session(files, key)
 
 
 def cmd_status():
