@@ -61,7 +61,9 @@ class ReviewIdentifier:
             )
             branch_name = branch_result.stdout.strip()
             if branch_name and branch_name != "HEAD":
-                return f"branch-{branch_name}"
+                # Normalize branch name by replacing "/" with "-" for filesystem compatibility
+                normalized_branch_name = branch_name.replace("/", "-")
+                return f"branch-{normalized_branch_name}"
             return None
         except subprocess.CalledProcessError:
             return None
