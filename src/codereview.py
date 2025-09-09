@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 from cli.util import yn
-from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
+from cli.parser import CommandOptions, Commands, parse_args_from_cli, print_usage
 from lib.initialize import cmd_init
 from lib.review_identifier import ReviewIdentifier
 from lib.sources.git import get_current_commit_sha, get_repo_root
