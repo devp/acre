@@ -5,11 +5,9 @@ from lib.review_identifier import ReviewIdentifier
 from lib.state import StateManager
 
 
-def cmd_init(review_id: Optional[str] = None, force: bool = False) -> None:
+def cmd_init(state_manager: StateManager, review_id: Optional[str] = None, force: bool = False) -> None:
     """Initialize a new code review session"""
     try:
-        state_manager = StateManager()
-        
         if not review_id:
             review_id = ReviewIdentifier.determine_review_id()
         

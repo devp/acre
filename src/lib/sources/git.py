@@ -1,0 +1,27 @@
+import subprocess
+
+def get_repo_root() -> str:
+    """Get repository root directory"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        raise ValueError("Not in a git repository")
+
+def get_current_commit_sha() -> str:
+    """Get current commit SHA"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        raise ValueError("Unable to get current commit SHA")

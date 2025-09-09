@@ -1,45 +1,19 @@
 import json
 import os
-import subprocess
 from typing import Optional
 
 from lib.models import FileState, PreApprovalBlock, ReviewState
-from lib.review_identifier import ReviewIdentifier
 
 class StateManager:
     """Manages review state persistence in .git/acre directory"""
     
-    def __init__(self):
-        self.repo_root = self._get_repo_root()
+    def __init__(self, repo_root: str, current_sha: str):
+        self.repo_root = repo_root
+        self.current_sha = current_sha
         self.acre_dir = os.path.join(self.repo_root, ".git", "acre")
         os.makedirs(self.acre_dir, exist_ok=True)
     
-    def _get_repo_root(self) -> str:
-        """Get repository root directory"""
-        try:
-            result = subprocess.run(
-                ["git", "rev-parse", "--show-toplevel"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            return result.stdout.strip()
-        except subprocess.CalledProcessError:
-            raise ValueError("Not in a git repository")
-    
-    def _get_current_commit_sha(self) -> str:
-        """Get current commit SHA"""
-        try:
-            result = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            return result.stdout.strip()
-        except subprocess.CalledProcessError:
-            raise ValueError("Unable to get current commit SHA")
-    
+
     def state_file_path(self, review_id: str) -> str:
         """Get path to state file for given review ID"""
         return os.path.join(self.acre_dir, f"{review_id}.json")
@@ -110,16 +84,11 @@ class StateManager:
             metadata=data.get("metadata", {})
         )
     
-    def initialize_review(self, review_id: Optional[str] = None) -> ReviewState:
+    def initialize_review(self, review_id: str) -> ReviewState:
         """Initialize a new review state"""
-        if not review_id:
-            review_id = ReviewIdentifier.determine_review_id()
-        
-        current_sha = self._get_current_commit_sha()
-        
         state = ReviewState(
             review_id=review_id,
-            init_commit_sha=current_sha
+            init_commit_sha=self.current_sha,
         )
         
         self.save_state(state)
@@ -133,4 +102,4 @@ class StateManager:
         f = state.files[path]
         if f is None:
             raise Exception(f"Not found for approval: {f}")
-        f.approved_sha = self._get_current_commit_sha()
+        f.approved_sha = self.current_sha
