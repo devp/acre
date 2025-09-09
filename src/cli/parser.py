@@ -7,6 +7,7 @@ from cli.context import Context
 from lib.commands.init import register as register_init
 from lib.commands.review import register as register_review
 from lib.commands.simple_commands import register as register_simple
+from lib.commands.interactive import register as register_interactive
 
 
 class Commands(Enum):
@@ -15,11 +16,11 @@ class Commands(Enum):
     STATUS = "status"
     RESET = "reset"
     REVIEW = "review"
+    INTERACTIVE = "interactive"
 
 class CommandOptions(Enum):
     REVIEW_SKIM = "review-skim"
     REVIEW_DEEP = "review-deep"
-    INTERACTIVE = "interactive"
     INIT_FORCE = "init-force"
 
 @dataclass
@@ -36,6 +37,7 @@ def _build_argparse():
     register_init(sub)
     register_simple(sub)
     register_review(sub)
+    register_interactive(sub)
     return p
 
 _ArgParser = _build_argparse()
