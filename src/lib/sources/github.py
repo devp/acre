@@ -27,8 +27,9 @@ def data_from_gh():
             if f.get("path")
         ]
         lines_changed = {
-            f.get("path"): (f.get("additions", 0) + f.get("deletions"))
-            for f in files
+            f.get("path"): (f.get("additions", 0) + f.get("deletions", 0))
+            for f in data.get("files", [])
+            if f.get("path")
         }
         return GHData(
             title=data.get("title"),
