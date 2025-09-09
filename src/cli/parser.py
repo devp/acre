@@ -3,6 +3,11 @@ from enum import Enum
 from typing import List, Optional
 from dataclasses import dataclass, field
 
+from cli.context import Context
+from lib.commands.init import register as register_init
+from lib.commands.review import register as register_review
+from lib.commands.simple_commands import register as register_simple
+
 
 class Commands(Enum):
     INIT = "init"
@@ -28,18 +33,9 @@ class CommandInstruction:
 def _build_argparse():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd")
-    init = sub.add_parser("init", help="Initialize a new code review session")
-    init.add_argument("--review-id", help="Custom review identifier")
-    init.add_argument("--force", help="Overwrite existing state file", action="store_true")
-    over = sub.add_parser("overview")
-    over.add_argument("-i", "--interactive", action="store_true")
-    sub.add_parser("status")
-    sub.add_parser("reset")
-    r = sub.add_parser("review")
-    r.add_argument("file")
-    g = r.add_mutually_exclusive_group()
-    g.add_argument("--skim", action="store_true")
-    g.add_argument("--deep", action="store_true")
+    register_init(sub)
+    register_simple(sub)
+    register_review(sub)
     return p
 
 _ArgParser = _build_argparse()
@@ -47,32 +43,13 @@ _ArgParser = _build_argparse()
 def print_usage():
     _ArgParser.print_usage()
 
-def parse_args_from_cli(override_args=None) -> Optional[CommandInstruction]:
+def parse_args_from_cli(context: Context, override_args=None) -> Optional[CommandInstruction]:
     args: argparse.Namespace = _ArgParser.parse_args(args=override_args)
-    match args.cmd:
-        case "init":
-            return CommandInstruction(
-                command=Commands.INIT,
-                reviewId=getattr(args, 'review_id', None),
-                options=[CommandOptions.INIT_FORCE] if args.force else []
-            )
-        case "overview":
-            return CommandInstruction(
-                command=Commands.OVERVIEW,
-                options=[CommandOptions.INTERACTIVE] if args.interactive else []
-            )
-        case "status":
-            return CommandInstruction(command=Commands.STATUS)
-        case "reset":
-            return CommandInstruction(command=Commands.RESET)
-        case "review":
-            return CommandInstruction(
-                command=Commands.REVIEW,
-                options=[
-                    (CommandOptions.REVIEW_DEEP
-                     if args.deep
-                     else CommandOptions.REVIEW_SKIM),
-                ],
-                filePath=args.file,
-            )
-    return None
+    if args.cmd is None:
+        print_usage()
+    else:
+        if "impl" in args:
+            args.impl(args=args, context=context)
+        else:
+            print("Not implemented:", args.cmd)
+            exit(1)
