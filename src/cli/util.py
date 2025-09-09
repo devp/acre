@@ -3,3 +3,7 @@ def yn(prompt, default=False):
     if not ans:
         return default
     return ans == "y"
+
+
+def are_all_integers(items):
+    return all(item.isdigit() for item in items)

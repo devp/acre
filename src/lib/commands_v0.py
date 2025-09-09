@@ -1,7 +1,7 @@
 import shlex
 import subprocess
-from cli.util import yn
-from lib.sources.github import data_from_gh
+from cli.util import are_all_integers, yn
+from lib.sources.github import data_from_gh, GHData
 from lib.sources.jira import find_jira_tag
 from lib.state import StateManager
 
@@ -19,6 +19,10 @@ def run_review_cmd(path, config):
     subprocess.run(args)
 
 
+def get_relevant_files() -> GHData:
+    return data_from_gh()
+
+
 class CommandsV0:
     """Simple earlier versions of some commands."""
 
@@ -32,7 +36,7 @@ class CommandsV0:
         self.state = _state
 
     def cmd_overview(self):
-        data = data_from_gh()
+        data = get_relevant_files()
         title = data.title or ""
         body = data.body or ""
         files = data.files
@@ -67,17 +71,28 @@ class CommandsV0:
         print(f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched")
 
 
-    def cmd_review(self, path, mode="default"):
-        if self.state.is_file_reviewed(path):
-            print(f"{path} already reviewed")
-            return False
-        run_review_cmd(path, self.config)
-        if not yn("Mark reviewed?"):
-            return False
-        self.state_manager.mark_file_reviewed(self.state, path)
-        self.state_manager.save_state(self.state)
-        lines = self.state.lines_of_file(path)
-        print(f"> Marked {lines} lines as reviewed ({mode} mode)")
+    def cmd_review(self, items, mode="default"):
+        relevant_files = get_relevant_files()
+        files = relevant_files.files
+
+        paths_to_review = []
+        if are_all_integers(items):
+            for item in items:
+                paths_to_review.append(files[int(item) - 1])
+        else:
+            paths_to_review = items
+
+        for path in paths_to_review:
+            if self.state.is_file_reviewed(path):
+                print(f"{path} already reviewed")
+                continue
+            run_review_cmd(path, self.config)
+            if not yn("Mark reviewed?"):
+                continue
+            self.state_manager.mark_file_reviewed(self.state, path)
+            self.state_manager.save_state(self.state)
+            lines = self.state.lines_of_file(path)
+            print(f"> Marked {lines} lines as reviewed ({mode} mode)")
         return True
 
 

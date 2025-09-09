@@ -10,12 +10,15 @@ def impl(args: argparse.Namespace, context: Context):
         state_manager=context.state_manager,
         config=context.config,
     )
-    cmdv0.cmd_review(args.file)
+    if not args.items:
+        print("Need files to review")
+        return
+    cmdv0.cmd_review(args.items)
 
 
 def register(sub: argparse._SubParsersAction):
     review = sub.add_parser("review")
-    review.add_argument("file")
+    review.add_argument("items", nargs="*")
     # Removing this option for now:
     # g = review.add_mutually_exclusive_group()
     # g.add_argument("--skim", action="store_true")
