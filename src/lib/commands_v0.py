@@ -68,6 +68,7 @@ class CommandsV0:
         print(f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched")
 
     def cmd_review(self, path, mode="default"):
+        """Reviews a single file"""
         if self.state.is_file_reviewed(path):
             print(f"{path} already reviewed")
             return False
