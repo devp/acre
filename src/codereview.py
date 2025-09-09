@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 import json
 import os
-import re
 import shlex
 import subprocess
 import sys
 
+from cli.util import yn
 from lib.cli import CommandOptions, Commands, parse_args_from_cli, print_usage
 from lib.initialize import cmd_init
 from lib.review_identifier import ReviewIdentifier
 from lib.sources.git import get_current_commit_sha, get_repo_root
 from lib.sources.github import data_from_gh
+from lib.sources.jira import find_jira_tag
 from lib.state import StateManager
 
 
@@ -29,12 +30,6 @@ def load_config():
         except json.JSONDecodeError:
             return {}
 
-def yn(prompt, default=False):
-    ans = input(f"{prompt} [{'Y/n' if default else 'y/N'}] ").strip().lower()
-    if not ans:
-        return default
-    return ans == "y"
-
 
 def run_review_cmd(path):
     config = load_config()
@@ -48,11 +43,6 @@ def run_review_cmd(path):
     else:
         args = ["git", "diff", "main", "--", path]
     subprocess.run(args)
-
-
-def find_jira(text):
-    m = re.search(r"[A-Z][A-Z0-9]+-\d+", text or "")
-    return m.group(0) if m else None
 
 
 class CommandsV0:
@@ -70,7 +60,7 @@ class CommandsV0:
         body = data.body or ""
         files = data.files
         print(f"\U0001F4CC PR Summary: {title}")
-        jira = find_jira("\n".join([title, body]))
+        jira = find_jira_tag(data)
         jira_base = config.get("jira", {}).get("base")
         if jira and jira_base:
             print(f"\U0001F517 Jira: https://{jira_base}.atlassian.net/browse/{jira}")

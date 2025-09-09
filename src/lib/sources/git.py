@@ -13,6 +13,18 @@ def get_repo_root() -> str:
     except subprocess.CalledProcessError:
         raise ValueError("Not in a git repository")
 
+def get_current_branch() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--show-current"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        raise ValueError("Unable to get current branch")
+
 def get_current_commit_sha() -> str:
     """Get current commit SHA"""
     try:
