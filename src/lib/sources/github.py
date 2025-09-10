@@ -8,6 +8,7 @@ from typing import List, Optional
 class GHData:
     title: Optional[str] = None
     body: Optional[str] = None
+    number: Optional[int] = None
     files: List[str] = field(default_factory=list)
     lines_changed: dict[str, int] = field(default_factory=dict)
 
@@ -15,7 +16,7 @@ class GHData:
 def data_from_gh():
     try:
         res = subprocess.run(
-            ["gh", "pr", "view", "--json", "title,body,files"],
+            ["gh", "pr", "view", "--json", "title,body,files,number"],
             check=True,
             capture_output=True,
             text=True,
@@ -31,9 +32,11 @@ def data_from_gh():
             for f in data.get("files", [])
             if f.get("path")
         }
+        number = int(data.get("number")) if data.get("number") else None
         return GHData(
             title=data.get("title"),
             body=data.get("body"),
+            number=number,
             files=files,
             lines_changed=lines_changed,
         )
