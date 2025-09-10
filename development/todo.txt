@@ -1,3 +1,7 @@
+QoL:
+- useful review option: small-diffs / loc<N
+
+Features:
 - autocomplete for cli (argcomplete library?)
 - options for: custom bases, custom ranges, over commits, without tickets or without GH
 - notes and annotations by file
