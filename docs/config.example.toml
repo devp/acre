@@ -1,5 +1,5 @@
 # Example configuration for the codereview tool.
-# This file should be copied to ~/.config/codereview.toml
+# This file should be copied to ~/.config/acre.toml
 
 [aliases]
 # Example alias: `st` will be expanded to `status`
