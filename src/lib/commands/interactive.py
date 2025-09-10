@@ -4,7 +4,7 @@ import shlex
 from cli.context import Context
 from cli.util import yn
 from lib.commands.review import register as register_review
-from lib.commands.simple_commands import register as register_simple
+from lib.commands.simple_commands import impl_status, register as register_simple
 from lib.config.config import resolve_cmd_from_config_aliases
 from lib.initialize import cmd_init
 
@@ -41,6 +41,7 @@ def impl_interactive(context: Context, **_):
     parser = _build_interactive_parser()
     while True:
         try:
+            impl_status(context=context)
             line = input("> ")
             if not line.strip():
                 break
