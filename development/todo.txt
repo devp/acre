@@ -1,3 +1,4 @@
+- allow detached branch (gh pr co --detached) still finds the right PR
 - autocomplete for cli (argcomplete library?)
 - options for: custom bases, custom ranges, over commits, without tickets or without GH
 - notes and annotations by file

@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 import json
-import sys
 import subprocess
 from typing import List, Optional
 
@@ -41,6 +40,6 @@ def data_from_gh():
             lines_changed=lines_changed,
         )
     except subprocess.CalledProcessError:
-        print("gh pr view failed; ensure you're on a PR branch")
-        print("TODO: make this robust for other branches and other info sources")
-        sys.exit(1)
+        # TODO: make this robust for detached branches, non-GH and other info sources
+        print("No GH data found for branch")
+        return GHData()
