@@ -2,9 +2,11 @@ import argparse
 import shlex
 
 from cli.context import Context
+from cli.util import yn
 from lib.commands.review import register as register_review
 from lib.commands.simple_commands import register as register_simple
 from lib.config.config import resolve_cmd_from_config_aliases
+from lib.initialize import cmd_init
 
 
 def _build_interactive_parser():
@@ -24,7 +26,16 @@ def _build_interactive_parser():
 
 def impl_interactive(context: Context, **_):
     print("Entering interactive mode.")
-    # TODO: check/prompt for init
+    
+    # Check if PR is initialized
+    if not context.state_manager.load_state(context.key):
+        print(f"No initialized review found for '{context.key}'")
+        if yn("Initialize now?", default=False):
+            cmd_init(state_manager=context.state_manager, review_id=context.key)
+        else:
+            print("Cannot proceed without initialized review. Exiting.")
+            return
+    
     parser = _build_interactive_parser()
     while True:
         try:
