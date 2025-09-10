@@ -21,7 +21,6 @@ class FileState:
         self.preapproved_sha = None
         self.preapproved_blocks = []
         self.notes = None
-        self.lines = 0
 
 
 @dataclass
