@@ -34,6 +34,12 @@ class CommandInstruction:
 
 def _build_argparse():
     p = argparse.ArgumentParser()
+    
+    # Add global commit range options
+    p.add_argument("--commit", help="Review a specific commit (displays diffs of commit vs commit~1)")
+    p.add_argument("--from", dest="from_ref", help="Start of commit range (displays diffs from this ref to --to or HEAD)")
+    p.add_argument("--to", dest="to_ref", help="End of commit range (defaults to HEAD if --from is specified)")
+    
     sub = p.add_subparsers(dest="cmd")
     register_init(sub)
     register_simple(sub)

@@ -54,3 +54,29 @@ def get_current_commit_sha() -> str:
 def diff(path, diff_target = "main"):
     args = ["git", "diff", diff_target, "--", path]
     subprocess.run(args)
+
+def resolve_ref(ref: str) -> str:
+    """Resolve a git reference to its SHA"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", ref],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        raise ValueError(f"Unable to resolve reference: {ref}")
+
+def get_commit_parent(commit_sha: str) -> str:
+    """Get the parent commit SHA"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", f"{commit_sha}~1"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        raise ValueError(f"Unable to get parent of commit: {commit_sha}")

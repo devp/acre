@@ -9,6 +9,9 @@ def impl(args: argparse.Namespace, context: Context):
         state_manager=context.state_manager,
         review_id=args.review_id,
         force=args.force,
+        commit=getattr(args, 'commit', None),
+        from_ref=getattr(args, 'from_ref', None),
+        to_ref=getattr(args, 'to_ref', None),
     )
 
 

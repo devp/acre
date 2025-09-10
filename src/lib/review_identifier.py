@@ -1,6 +1,7 @@
 from typing import Optional
 
 from lib.sources.git import get_current_branch, get_current_commit_sha, get_name_rev
+from lib.commit_range import CommitRange
 
 class ReviewIdentifier:
     """Modular logic for determining review slug/identifier"""
@@ -29,9 +30,18 @@ class ReviewIdentifier:
             pass
         return None
     
+    @staticmethod
+    def from_commit_range(commit_range: CommitRange) -> str:
+        """Get identifier from commit range"""
+        return commit_range.to_review_id()
+    
     @classmethod
-    def determine_review_id(cls) -> str:
+    def determine_review_id(cls, commit_range: Optional[CommitRange] = None) -> str:
         """Determine review ID using fallback strategy"""
+        # Use commit range if provided
+        if commit_range:
+            return cls.from_commit_range(commit_range)
+            
         if branch_id := cls.from_branch():
             return branch_id
 
