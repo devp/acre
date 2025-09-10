@@ -1,0 +1,6 @@
+# Example configuration for the codereview tool.
+# This file should be copied to ~/.config/codereview.toml
+
+[aliases]
+# Example alias: `st` will be expanded to `status`
+st = "status"
