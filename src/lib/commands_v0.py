@@ -40,6 +40,8 @@ class CommandsV0:
         print(f"\U0001F4CC PR Summary: {title}")
         jira = find_jira_tag(data)
         jira_base = self.config.get("jira", {}).get("base")
+        if data.number:
+            print(f"Ticket: #{data.number}")
         if jira and jira_base:
             print(f"\U0001F517 Jira: https://{jira_base}.atlassian.net/browse/{jira}")
         elif jira:
