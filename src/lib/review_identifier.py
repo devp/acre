@@ -1,6 +1,6 @@
 from typing import Optional
 
-from lib.sources.git import get_current_branch, get_current_commit_sha
+from lib.sources.git import get_current_branch, get_current_commit_sha, get_name_rev
 
 class ReviewIdentifier:
     """Modular logic for determining review slug/identifier"""
@@ -9,7 +9,7 @@ class ReviewIdentifier:
     def from_branch() -> Optional[str]:
         """Get identifier from current branch"""
         try:
-            branch_name = get_current_branch()
+            branch_name = get_current_branch() or get_name_rev()
             if branch_name and branch_name != "HEAD":
                 # Normalize branch name by replacing "/" with "-"
                 normalized_branch_name = branch_name.replace("/", "-")

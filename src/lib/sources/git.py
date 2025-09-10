@@ -25,6 +25,19 @@ def get_current_branch() -> str:
     except subprocess.CalledProcessError:
         raise ValueError("Unable to get current branch")
 
+def get_name_rev() -> str:
+    """This works if on detached head."""
+    try:
+        result = subprocess.run(
+            ["git", "name-rev", "--name-only", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip().replace("", "")
+    except subprocess.CalledProcessError:
+        raise ValueError("Unable to get current branch")
+
 def get_current_commit_sha() -> str:
     """Get current commit SHA"""
     try:
