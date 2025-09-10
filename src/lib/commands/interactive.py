@@ -2,40 +2,46 @@ import argparse
 import shlex
 
 from cli.context import Context
+from lib.commands.review import register as register_review
+from lib.commands.simple_commands import register as register_simple
+from lib.config.config import resolve_cmd_from_config_aliases
 
 
 def _build_interactive_parser():
-    parser = argparse.ArgumentParser(prog="", description="Interactive session")
-    subparsers = parser.add_subparsers(dest="cmd")
+    p = argparse.ArgumentParser()
+    sub = p.add_subparsers(dest="cmd")
 
-    def impl_hello(name, **_):
-        print(f"Hello, {name}!")
+    # Including existing commands
+    register_simple(sub)
+    register_review(sub)
 
-    hello_parser = subparsers.add_parser("hello", help="Prints a greeting")
-    hello_parser.add_argument("name", help="The name to greet")
-    hello_parser.set_defaults(impl=impl_hello)
+    # Interactive-only command (help)
+    help = sub.add_parser("help", aliases=["h", "?"])
+    help.set_defaults(impl=p.print_usage)
 
-    exit_parser = subparsers.add_parser("exit", help="Exits the interactive session")
-    exit_parser.set_defaults(impl=lambda **_: exit(0))
-
-    return parser
+    return p
 
 
 def impl_interactive(context: Context, **_):
-    print("Entering interactive mode. Type 'exit' or an empty line to quit.")
+    print("Entering interactive mode.")
+    # TODO: check/prompt for init
     parser = _build_interactive_parser()
     while True:
         try:
             line = input("> ")
             if not line.strip():
                 break
-
             try:
-                args = parser.parse_args(shlex.split(line))
-                if "impl" in args:
-                    args.impl(**vars(args))
-                else:
+                raw_args = shlex.split(line)
+                if len(raw_args) == 1 and raw_args in ["h", "help", "?"]:
                     parser.print_help()
+                else:
+                    expanded_args = resolve_cmd_from_config_aliases(cmd=raw_args[0], config=context.config) + raw_args[1:]
+                    args = parser.parse_args(args=expanded_args)
+                    if "impl" in args:
+                        args.impl(args=args, context=context)
+                    else:
+                        print("Command not implemented.", args)
             except SystemExit:
                 # Argparse calls exit() on --help or errors, so we catch it
                 pass
