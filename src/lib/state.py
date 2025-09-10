@@ -100,6 +100,12 @@ class StateManager:
             init_commit_sha=self.current_sha,
             files=files,
         )
+
+        if gh_data:
+            if gh_data.base_commit:
+                state.metadata["base_commit"] = gh_data.base_commit
+            if gh_data.head_commit:
+                state.metadata["head_commit"] = gh_data.head_commit
         
         self.save_state(state)
         return state

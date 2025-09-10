@@ -2,22 +2,11 @@ import shlex
 import subprocess
 from cli.pretty import print_whimsically
 from cli.util import yn
+from lib.sources.git import diff
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
 from lib.state import StateManager
 
-
-def run_review_cmd(path, config):
-    cmd = config.get("actions", {}).get("onReview")
-    if cmd:
-        if "{file}" in cmd:
-            cmd = cmd.replace("{file}", shlex.quote(path))
-            args = shlex.split(cmd)
-        else:
-            args = shlex.split(cmd) + [path]
-    else:
-        args = ["git", "diff", "main", "--", path]
-    subprocess.run(args)
 
 
 class CommandsV0:
@@ -81,7 +70,7 @@ class CommandsV0:
         if self.state.is_file_reviewed(path):
             print(f"{path} already reviewed")
             return False
-        run_review_cmd(path, self.config)
+        diff(path, diff_target=self.state.diff_target())
         if not yn("Mark reviewed?"):
             return False
         self.state_manager.mark_file_reviewed(self.state, path)

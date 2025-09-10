@@ -48,6 +48,13 @@ class ReviewState:
         f = self.files.get(file_name)
         return bool(f.approved_sha) if f is not None else None
 
+    def diff_target(self) -> str:
+        a = self.metadata.get("base_commit")
+        b = self.metadata.get("head_commit")
+        if a and b:
+            return f"{a}..{b}"
+        return "main"
+
     def __getitem__(self, key):
         """Primarily for legacy support."""
         match key:

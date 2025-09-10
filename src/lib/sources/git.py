@@ -50,3 +50,7 @@ def get_current_commit_sha() -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError:
         raise ValueError("Unable to get current commit SHA")
+
+def diff(path, diff_target = "main"):
+    args = ["git", "diff", diff_target, "--", path]
+    subprocess.run(args)

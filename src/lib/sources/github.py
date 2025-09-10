@@ -12,11 +12,13 @@ class GHData:
     number: Optional[int] = None
     files: List[str] = field(default_factory=list)
     lines_changed: dict[str, int] = field(default_factory=dict)
+    base_commit: Optional[str] = None
+    head_commit: Optional[str] = None
 
 
 def data_from_gh(retry_remote_branch=False):
     try:
-        cmds = ["gh", "pr", "view", "--json", "title,body,files,number"]
+        cmds = ["gh", "pr", "view", "--json", "title,body,files,number,baseRefOid,headRefOid"]
         if retry_remote_branch:
             name_rev = get_name_rev()
             if name_rev.startswith("remotes/origin/"):
@@ -46,6 +48,8 @@ def data_from_gh(retry_remote_branch=False):
             number=number,
             files=files,
             lines_changed=lines_changed,
+            base_commit=data.get("baseRefOid"),
+            head_commit=data.get("headRefOid"),
         )
     except subprocess.CalledProcessError:
         if not retry_remote_branch:
