@@ -28,7 +28,8 @@ class CommandsV0:
         self.state_manager = state_manager
         _state = self.state_manager.load_state(key)
         if not _state:
-            raise Exception("No state file: run init first")
+            print("No state file: run init first")
+            exit(1)
         self.state = _state
 
     def cmd_overview(self):
