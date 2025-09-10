@@ -28,11 +28,20 @@ def impl_reset(context: Context, **_):
     )
     cmdv0.cmd_reset()
 
+def impl_ls(context: Context, **_):
+    cmdv0 = CommandsV0(
+        key=context.key,
+        state_manager=context.state_manager,
+        config=context.config,
+    )
+    cmdv0.cmd_list_files()
 
 def register(sub: argparse._SubParsersAction):
-    overview = sub.add_parser("overview")
-    overview.set_defaults(impl=impl_overview)
-    status = sub.add_parser("status")
+    status = sub.add_parser("status", help="Status of review")
     status.set_defaults(impl=impl_status)
-    reset = sub.add_parser("reset")
+    ls = sub.add_parser("ls", help="List of files for this review, including their numbered indexes")
+    ls.set_defaults(impl=impl_ls)
+    overview = sub.add_parser("overview")
+    overview.set_defaults(impl=impl_overview, help="Print an overview of the request context, including status and list of files")
+    reset = sub.add_parser("reset", help="Reset the progress of the code review")
     reset.set_defaults(impl=impl_reset)

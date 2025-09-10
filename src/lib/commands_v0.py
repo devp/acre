@@ -35,7 +35,6 @@ class CommandsV0:
         data = data_from_gh()
         title = data.title or ""
         body = data.body or ""
-        files = data.files
         print(f"\U0001F4CC PR Summary: {title}")
         jira = find_jira_tag(data)
         jira_base = self.config.get("jira", {}).get("base")
@@ -45,16 +44,17 @@ class CommandsV0:
             print(f"\U0001F517 Jira: {jira}")
         if body:
             print(f"> {body}")
-        changed_lines_total = 0
-        print("\n\U0001F4C1 File Summary:")
-        for idx, path in enumerate(files, 1):
-            reviewed = self.state.is_file_reviewed(path)
-            lines = data.lines_changed.get(path, 0)
-            changed_lines_total += lines
-            mark = "\u2705 " if reviewed else ""
-            print(f"{idx}. {mark}{path:25} +{lines}")
-        print(f"\n\U0001F9AE Total: {len(files)} files, {changed_lines_total} changed lines")
+        self.cmd_list_files()
+        self.cmd_status()
 
+    def cmd_list_files(self):
+        print("\n\U0001F4C1 File Summary:")
+        for idx, path in enumerate(self.state.files, 1):
+            reviewed = self.state.is_file_reviewed(path)
+            file = self.state.files.get(path)
+            lines = file.lines if file else 0
+            mark = "\u2705 " if reviewed else ""
+            print(f"{idx}. {mark}{path:25} Δ{lines}")
 
     def cmd_status(self):
         total = self.state.total_lines()
@@ -65,7 +65,6 @@ class CommandsV0:
         num_files_reviewed = len(self.state.reviewed_files())
         files_left = num_files - num_files_reviewed
         print(f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched")
-
 
     def cmd_review(self, path, mode="default"):
         if self.state.is_file_reviewed(path):
@@ -80,10 +79,6 @@ class CommandsV0:
         print(f"> Marked {lines} lines as reviewed ({mode} mode)")
         return True
 
-
     def cmd_reset(self):
         self.state_manager.do_reset(self.state)
         self.state_manager.save_state(self.state)
-
-
-
