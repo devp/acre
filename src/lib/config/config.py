@@ -1,6 +1,7 @@
 import os
+import shlex
 import tomllib
-from typing import Dict
+from typing import Dict, List
 
 def load_config() -> Dict:
     # TODO: accept an override, either from script and os envs or for tests
@@ -12,3 +13,10 @@ def load_config() -> Dict:
             except (tomllib.TOMLDecodeError, FileNotFoundError):
                 pass
     return {}
+
+def resolve_cmd_from_config_aliases(cmd: str, config: Dict) -> List[str]:
+    aliases = config.get("aliases")
+    if aliases:
+        if cmd in aliases:
+            return shlex.split(aliases[cmd])
+    return [cmd]
