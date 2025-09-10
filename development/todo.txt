@@ -1,14 +1,7 @@
-Features:
-
-- options for: custom bases, custom ranges, over commits, without tickets
+- autocomplete for cli (argcomplete library?)
+- options for: custom bases, custom ranges, over commits, without tickets or without GH
+- notes and annotations by file
+- notes and annotations by block/line
 - line-by-line deep dives & approvals
 - filter-by-regex for review and approve line-by-line over one or all files
 - semantic grouping
-
-Ongoing:
-
-- general refactor for tests
-
-Questions:
-
-- Should I focus away from the LOC of a diff, and towards building the reader's understanding through writing and paraphrasing the diff?
