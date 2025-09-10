@@ -1,5 +1,6 @@
 import shlex
 import subprocess
+from cli.pretty import print_whimsically
 from cli.util import yn
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
@@ -67,7 +68,11 @@ class CommandsV0:
         num_files = len(self.state.files)
         num_files_reviewed = len(self.state.reviewed_files())
         files_left = num_files - num_files_reviewed
-        print(f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched")
+        text = f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched"
+        if files_left == 0 and num_files > 0:
+            print_whimsically(text)
+        else:
+            print(text)
 
     def cmd_review(self, path, mode="default"):
         """Reviews a single file"""
