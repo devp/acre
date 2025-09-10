@@ -18,8 +18,10 @@ def _build_interactive_parser():
     register_review(sub)
 
     # Interactive-only command (help)
+    def impl_help(**_):
+        p.print_usage()
     help = sub.add_parser("help", aliases=["h", "?"])
-    help.set_defaults(impl=p.print_usage)
+    help.set_defaults(impl=impl_help)
 
     return p
 
@@ -44,15 +46,12 @@ def impl_interactive(context: Context, **_):
                 break
             try:
                 raw_args = shlex.split(line)
-                if len(raw_args) == 1 and raw_args in ["h", "help", "?"]:
-                    parser.print_help()
+                expanded_args = resolve_cmd_from_config_aliases(cmd=raw_args[0], config=context.config) + raw_args[1:]
+                args = parser.parse_args(args=expanded_args)
+                if "impl" in args:
+                    args.impl(args=args, context=context)
                 else:
-                    expanded_args = resolve_cmd_from_config_aliases(cmd=raw_args[0], config=context.config) + raw_args[1:]
-                    args = parser.parse_args(args=expanded_args)
-                    if "impl" in args:
-                        args.impl(args=args, context=context)
-                    else:
-                        print("Command not implemented.", args)
+                    print("Command not implemented.", args)
             except SystemExit:
                 # Argparse calls exit() on --help or errors, so we catch it
                 pass
