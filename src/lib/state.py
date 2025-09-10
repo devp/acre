@@ -3,6 +3,7 @@ import os
 from typing import Optional
 
 from lib.models import FileState, PreApprovalBlock, ReviewState
+from lib.sources.github import GHData
 
 class StateManager:
     """Manages review state persistence in .git/acre directory"""
@@ -84,11 +85,20 @@ class StateManager:
             metadata=data.get("metadata", {})
         )
     
-    def initialize_review(self, review_id: str) -> ReviewState:
+    def initialize_review(self, review_id: str, gh_data: Optional[GHData] = None) -> ReviewState:
         """Initialize a new review state"""
+        files = {}
+        
+        # Populate files from GitHub data if available
+        if gh_data:
+            for file_path in gh_data.files:
+                lines_changed = gh_data.lines_changed.get(file_path, 0)
+                files[file_path] = FileState(lines=lines_changed)
+        
         state = ReviewState(
             review_id=review_id,
             init_commit_sha=self.current_sha,
+            files=files,
         )
         
         self.save_state(state)

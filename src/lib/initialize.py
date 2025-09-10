@@ -2,6 +2,7 @@ import sys
 from typing import Optional
 
 from lib.review_identifier import ReviewIdentifier
+from lib.sources.github import data_from_gh
 from lib.state import StateManager
 
 
@@ -19,8 +20,11 @@ def cmd_init(state_manager: StateManager, review_id: Optional[str] = None, force
                 print(f"Initialized at commit: {existing_state.init_commit_sha}")
                 return
         
-        # Initialize new review
-        state = state_manager.initialize_review(review_id)
+        # Get GitHub data for initial files and line counts
+        gh_data = data_from_gh()
+        
+        # Initialize new review with GitHub data
+        state = state_manager.initialize_review(review_id, gh_data)
         
         print(f"Initialized review: {review_id}")
         print(f"Commit SHA: {state.init_commit_sha}")
