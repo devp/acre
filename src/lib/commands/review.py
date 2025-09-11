@@ -15,6 +15,13 @@ def impl(args: argparse.Namespace, context: Context):
         ]
     else:
         paths_to_review = known_files
+    
+    if args.todo:
+        paths_to_review = [
+            path for path in paths_to_review 
+            if path and state and not state.is_file_reviewed(path)
+        ]
+    
     cmdv0 = CommandsV0(
         key=context.key,
         state_manager=context.state_manager,
@@ -27,8 +34,5 @@ def impl(args: argparse.Namespace, context: Context):
 def register(sub: argparse._SubParsersAction):
     review = sub.add_parser("review")
     review.add_argument("items", nargs="*")
-    # Removing this option for now:
-    # g = review.add_mutually_exclusive_group()
-    # g.add_argument("--skim", action="store_true")
-    # g.add_argument("--deep", action="store_true")
+    review.add_argument("--todo", action="store_true", help="Only review unreviewed files")
     review.set_defaults(impl=impl)
