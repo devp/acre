@@ -5,10 +5,17 @@
 
 # Enhancements
 
-- useful review option: small-diffs / loc<N
+- The review command should accept a flag `--skim` , which emits the diffs for
+  the chosen files at aonce, and asks a single yb approve to approve or not approve-all.
+- The review command should accept a flag `--loc-lte <int>`, which selects files
+  where the `lines` changed is <= the <int>.
+- The ls command accepts a flag `--raw` that just emits the raw filenames separated by linebreaks
+  with no other information. This is useful for custom pipe commands,
+  e.g. `acre ls --todo --raw | xargs cat | rg "class Test|def test"` to summarize tests.
 
 # Features
 
+- interactive history (readline? I basically want the up arrow to work like I expect.)
 - autocomplete for cli (argcomplete library?)
 - options for: custom bases, custom ranges, over commits, without tickets or without GH
 - notes and annotations by file
@@ -21,3 +28,4 @@
 # Chores
 
 - python version: determine how low a version of 3.x can be supported
+- I find your lack of tests distrubing. `:-/`
