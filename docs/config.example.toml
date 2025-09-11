@@ -1,11 +1,17 @@
 # Example configuration for the codereview tool.
 # This file should be copied to ~/.config/acre.toml
 
+# Default commands to run when no command is specified
+default_commands = "status"
+
 [aliases]
 # Example alias: `st` will be expanded to `status`
 st = "status"
+# If you want to get into interactive and always initialize a pull request:
+i  = "interactive --auto-yes"
+# Short aliases are useful for interactive mode.
+lt = "ls --todo"
 
-# Default commands to run when no command is specified
-# Can be a string or a list of strings
-default_commands = "status"
-# Or as a list: default_commands = ["status", "--verbose"]
+# Include jira info to include URLs to tickets.
+[jira]
+base = "your-corp"
