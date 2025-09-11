@@ -1,5 +1,3 @@
-import shlex
-import subprocess
 from cli.pretty import print_whimsically
 from cli.util import yn
 from lib.sources.git import diff
