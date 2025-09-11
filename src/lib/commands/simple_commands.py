@@ -20,7 +20,16 @@ def impl_status(context: Context, **_):
     )
     cmdv0.cmd_status()
 
-def impl_reset(context: Context, **_):
+def impl_reset(context: Context, args=None, **_):
+    if args and getattr(args, 'destroy', False):
+        from cli.util import yn
+        if yn(f"Are you sure you want to permanently delete the review '{context.key}'?", default=False):
+            context.state_manager.delete_state(context.key)
+            print(f"Review '{context.key}' has been deleted.")
+        else:
+            print("Reset cancelled.")
+        return
+    
     cmdv0 = CommandsV0(
         key=context.key,
         state_manager=context.state_manager,
@@ -46,4 +55,6 @@ def register(sub: argparse._SubParsersAction):
     overview = sub.add_parser("overview")
     overview.set_defaults(impl=impl_overview, help="Print an overview of the request context, including status and list of files")
     reset = sub.add_parser("reset", help="Reset the progress of the code review")
+    reset.add_argument("--destroy", action="store_true",
+                      help="Permanently delete the review file (requires confirmation)")
     reset.set_defaults(impl=impl_reset)

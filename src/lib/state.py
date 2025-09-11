@@ -119,3 +119,9 @@ class StateManager:
         if f is None:
             raise Exception(f"Not found for approval: {f}")
         f.approved_sha = self.current_sha
+
+    def delete_state(self, review_id: str) -> None:
+        """Permanently delete the review state file"""
+        state_file = self.state_file_path(review_id)
+        if os.path.exists(state_file):
+            os.remove(state_file)
