@@ -26,13 +26,15 @@ def _build_interactive_parser():
     return p
 
 
-def impl_interactive(context: Context, **_):
+def impl_interactive(context: Context, args=None, **_):
     print("Entering interactive mode.")
+    
+    auto_yes = getattr(args, 'auto_yes', False) if args else False
     
     # Check if PR is initialized
     if not context.state_manager.load_state(context.key):
         print(f"No initialized review found for '{context.key}'")
-        if yn("Initialize now?", default=False):
+        if auto_yes or yn("Initialize now?", default=False):
             cmd_init(state_manager=context.state_manager, review_id=context.key)
         else:
             print("Cannot proceed without initialized review. Exiting.")
@@ -63,4 +65,6 @@ def impl_interactive(context: Context, **_):
 
 def register(sub: argparse._SubParsersAction):
     parser = sub.add_parser("interactive", help="Starts an interactive session")
+    parser.add_argument("-y", "--auto-yes", action="store_true", 
+                       help="Automatically answer 'yes' to initialization prompts")
     parser.set_defaults(impl=impl_interactive)
