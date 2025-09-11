@@ -106,6 +106,8 @@ class StateManager:
                 state.metadata["base_commit"] = gh_data.base_commit
             if gh_data.head_commit:
                 state.metadata["head_commit"] = gh_data.head_commit
+            if gh_data.number:
+                state.metadata["pr_number"] = str(gh_data.number)
         
         self.save_state(state)
         return state
