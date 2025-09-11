@@ -4,3 +4,8 @@
 [aliases]
 # Example alias: `st` will be expanded to `status`
 st = "status"
+
+# Default commands to run when no command is specified
+# Can be a string or a list of strings
+default_commands = "status"
+# Or as a list: default_commands = ["status", "--verbose"]

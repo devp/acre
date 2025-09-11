@@ -8,6 +8,7 @@ from lib.commands.init import register as register_init
 from lib.commands.review import register as register_review
 from lib.commands.simple_commands import register as register_simple
 from lib.commands.interactive import register as register_interactive
+from lib.config.config import get_default_commands
 
 
 class Commands(Enum):
@@ -48,7 +49,11 @@ def print_usage():
 def parse_args_from_cli(context: Context, override_args=None) -> Optional[CommandInstruction]:
     args: argparse.Namespace = _ArgParser.parse_args(args=override_args)
     if args.cmd is None:
-        print_usage()
+        default_commands = get_default_commands(context.config)
+        if default_commands:
+            parse_args_from_cli(context=context, override_args=default_commands)
+        else:
+            print_usage()
     else:
         if "impl" in args:
             args.impl(args=args, context=context)

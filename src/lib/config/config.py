@@ -20,3 +20,12 @@ def resolve_cmd_from_config_aliases(cmd: str, config: Dict) -> List[str]:
         if cmd in aliases:
             return shlex.split(aliases[cmd])
     return [cmd]
+
+def get_default_commands(config: Dict) -> List[str]:
+    default_commands = config.get("default_commands")
+    if default_commands:
+        if isinstance(default_commands, str):
+            return shlex.split(default_commands)
+        elif isinstance(default_commands, list):
+            return default_commands
+    return []
