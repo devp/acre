@@ -3,11 +3,6 @@
 - `0.9`: a version I'm using daily and finding useful
 - `1.0`: a version I'm confident that others can use
 
-# Enhancements
-
-- The review command should accept a flag `--skim` , which emits the diffs for
-  the chosen files at aonce, and asks a single yb approve to approve or not approve-all.
-
 # Features
 
 - interactive history (readline? I basically want the up arrow to work like I expect.)

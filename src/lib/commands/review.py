@@ -1,6 +1,7 @@
 import argparse
 
 from cli.context import Context
+from cli.util import yn
 from lib.commands_v0 import CommandsV0
 
 
@@ -12,9 +13,12 @@ def impl(args: argparse.Namespace, context: Context):
     known_files = list(state.files.keys())
     if args.items:
         paths_to_review = [
-            (known_files[int(item) - 1] if item.isdigit() else None)
-            for item
-            in args.items
+                path
+                for path in [
+                    (known_files[int(item) - 1] if item.isdigit() else None)
+                    for item in args.items
+                ]
+                if path is not None
         ]
     else:
         paths_to_review = known_files
@@ -36,13 +40,22 @@ def impl(args: argparse.Namespace, context: Context):
         state_manager=context.state_manager,
         config=context.config,
     )
+
+    skim_mode = bool(hasattr(args, 'skim') and args.skim)
     for path in paths_to_review:
-        cmdv0.cmd_review(path=path)
+        cmdv0.cmd_review(path=path, ask_approve=(False if skim_mode else True))
+    if skim_mode:
+        if yn("Approve all files?"):
+            for path in paths_to_review:
+                context.state_manager.mark_file_reviewed(state=state, path=path)
+            context.state_manager.save_state(state)
+            print(f"> Marked {len(paths_to_review)} files as reviewed (skim mode)")
 
 
 def register(sub: argparse._SubParsersAction):
     review = sub.add_parser("review")
     review.add_argument("items", nargs="*")
     review.add_argument("--todo", action="store_true", help="Only review unreviewed files")
+    review.add_argument("--skim", action="store_true", help="Show all diffs and ask for approval as a whole")
     review.add_argument("--loc-lte", type=int, help="Only review files with lines changed <= this number")
     review.set_defaults(impl=impl)
