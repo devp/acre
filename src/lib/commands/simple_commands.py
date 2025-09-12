@@ -62,8 +62,8 @@ def register(sub: argparse._SubParsersAction):
     ls.add_argument("--todo", action="store_true", help="Only list unreviewed files (without changing their indices)")
     ls.add_argument("--raw", action="store_true", help="Output only raw filenames separated by linebreaks")
     ls.set_defaults(impl=impl_ls)
-    overview = sub.add_parser("overview")
-    overview.set_defaults(impl=impl_overview, help="Print an overview of the request context, including status and list of files")
+    overview = sub.add_parser("overview" , help="Print an overview of the request context, including status and list of files")
+    overview.set_defaults(impl=impl_overview)
     reset = sub.add_parser("reset", help="Reset the progress of the code review")
     reset.add_argument("--destroy", action="store_true",
                       help="Permanently delete the review file (requires confirmation)")

@@ -53,8 +53,9 @@ def impl(args: argparse.Namespace, context: Context):
 
 
 def register(sub: argparse._SubParsersAction):
-    review = sub.add_parser("review")
-    review.add_argument("items", nargs="*")
+    review = sub.add_parser("review", help="Review one or more files")
+    review.add_argument("items", nargs="*", help="Items defined as either paths or indexes from `ls` command. "
+        "If none provided, review all files.")
     review.add_argument("--todo", action="store_true", help="Only review unreviewed files")
     review.add_argument("--skim", action="store_true", help="Show all diffs and ask for approval as a whole")
     review.add_argument("--loc-lte", type=int, help="Only review files with lines changed <= this number")
