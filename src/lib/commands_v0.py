@@ -1,5 +1,5 @@
 from cli.pretty import print_whimsically
-from cli.util import yn
+from cli.util import ynxyz
 from lib.sources.git import diff
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
@@ -75,8 +75,29 @@ class CommandsV0:
         diff(path, diff_target=self.state.diff_target())
         if not ask_approve:
             return
-        if not yn("Mark reviewed?"):
-            return
+        
+        while True:
+            response, raw_input = ynxyz("Mark reviewed? ([c]opy filename, [e]dit file)")
+            
+            if response is True:
+                # User said yes
+                break
+            elif response is False:
+                # User said no
+                return
+            else:
+                # Handle other commands
+                command = raw_input.lower()
+                if command == "c" or command == "copy":
+                    print("Not implemented")
+                    continue
+                elif command == "e" or command == "edit":
+                    print("Not implemented") 
+                    continue
+                else:
+                    print(f"Unknown command: {raw_input}")
+                    continue
+        
         self.state_manager.mark_file_reviewed(self.state, path)
         self.state_manager.save_state(self.state)
         lines = self.state.lines_of_file(path)
