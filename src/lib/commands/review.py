@@ -1,9 +1,46 @@
 import argparse
 
 from cli.context import Context
-from cli.util import yn
-from lib.commands_v0 import CommandsV0
+from cli.util import yn, ynxyz
+from lib.models import ReviewState
+from lib.sources.git import diff
+from lib.state import StateManager
 
+def impl_review_one(
+        path: str,
+        state_manager: StateManager,
+        state: ReviewState,
+        ask_approve=True,
+):
+    """Reviews a single file"""
+    if state.is_file_reviewed(path):
+        print(f"{path} already reviewed")
+        return False
+    diff(path, diff_target=state.diff_target())
+    if not ask_approve:
+        return
+    
+    def _mark_reviewed():
+        state_manager.mark_file_reviewed(state, path)
+        state_manager.save_state(state)
+        lines = state.lines_of_file(path)
+        print(f"> Marked {lines} lines as reviewed")
+
+    while True:
+        response, other_cmd = ynxyz("Mark reviewed? ([c]opy filename, [e]dit file)")
+        if response is True:
+            _mark_reviewed()
+            break
+        elif response is False:
+            break
+        else:
+            match (other_cmd and other_cmd.lower()):
+                case "c":
+                    print("Not implemented")
+                    continue
+                case "e":
+                    print("Not implemented") 
+                    continue
 
 def impl(args: argparse.Namespace, context: Context):
     state = context.state_manager.load_state(context.key)
@@ -35,15 +72,14 @@ def impl(args: argparse.Namespace, context: Context):
             if path and state.lines_of_file(path) is not None and state.lines_of_file(path) <= args.loc_lte
         ]
     
-    cmdv0 = CommandsV0(
-        key=context.key,
-        state_manager=context.state_manager,
-        config=context.config,
-    )
-
     skim_mode = bool(hasattr(args, 'skim') and args.skim)
     for path in paths_to_review:
-        cmdv0.cmd_review(path=path, ask_approve=(False if skim_mode else True))
+        impl_review_one(
+            path=path,
+            state=state,
+            state_manager=context.state_manager,
+            ask_approve=(False if skim_mode else True)
+        )
     if skim_mode:
         if yn("Approve all files?"):
             for path in paths_to_review:
