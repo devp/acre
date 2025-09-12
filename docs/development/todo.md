@@ -5,7 +5,6 @@
 
 # Enhancements
 
-- add command to get data from the review state with dot operators, mainly a convenience for getting PR number for gh usage
 - The review command should accept a flag `--skim` , which emits the diffs for
   the chosen files at aonce, and asks a single yb approve to approve or not approve-all.
 - The review command should accept a flag `--loc-lte <int>`, which selects files

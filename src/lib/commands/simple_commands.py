@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from cli.context import Context
 from lib.commands_v0 import CommandsV0
@@ -47,6 +48,12 @@ def impl_ls(context: Context, args, **_):
     )
     cmdv0.cmd_list_files(todo_only=todo_only, raw=raw)
 
+def impl_metadata(context: Context, **_):
+    state = context.state_manager.load_state(context.key)
+    if not state:
+        print(f"No review state found for {context.key}")
+        return
+    print(json.dumps(state.metadata, indent=2))
 
 def register(sub: argparse._SubParsersAction):
     status = sub.add_parser("status", help="Status of review")
@@ -61,3 +68,5 @@ def register(sub: argparse._SubParsersAction):
     reset.add_argument("--destroy", action="store_true",
                       help="Permanently delete the review file (requires confirmation)")
     reset.set_defaults(impl=impl_reset)
+    metadata = sub.add_parser("metadata", help="Get metadata from review state, output as JSON")
+    metadata.set_defaults(impl=impl_metadata)
