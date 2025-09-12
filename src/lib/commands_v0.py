@@ -38,11 +38,15 @@ class CommandsV0:
         self.cmd_list_files()
         self.cmd_status()
 
-    def cmd_list_files(self, todo_only=False):
-        print("\n\U0001F4C1 File Summary:")
+    def cmd_list_files(self, todo_only=False, raw=False):
+        if not raw:
+            print("\n\U0001F4C1 File Summary:")
         for idx, path in enumerate(self.state.files, 1):
             reviewed = self.state.is_file_reviewed(path)
             if todo_only and reviewed:
+                continue
+            if raw:
+                print(path)
                 continue
             file = self.state.files.get(path)
             lines = file.lines if file else 0

@@ -10,9 +10,6 @@
   the chosen files at aonce, and asks a single yb approve to approve or not approve-all.
 - The review command should accept a flag `--loc-lte <int>`, which selects files
   where the `lines` changed is <= the <int>.
-- The ls command accepts a flag `--raw` that just emits the raw filenames separated by linebreaks
-  with no other information. This is useful for custom pipe commands,
-  e.g. `acre ls --todo --raw | xargs cat | rg "class Test|def test"` to summarize tests.
 
 # Features
 
