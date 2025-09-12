@@ -7,8 +7,6 @@
 
 - The review command should accept a flag `--skim` , which emits the diffs for
   the chosen files at aonce, and asks a single yb approve to approve or not approve-all.
-- The review command should accept a flag `--loc-lte <int>`, which selects files
-  where the `lines` changed is <= the <int>.
 
 # Features
 

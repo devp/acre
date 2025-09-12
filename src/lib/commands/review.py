@@ -6,7 +6,10 @@ from lib.commands_v0 import CommandsV0
 
 def impl(args: argparse.Namespace, context: Context):
     state = context.state_manager.load_state(context.key)
-    known_files = list(state.files.keys()) if state else []
+    if not state:
+        print("No state file found. Run 'init' first.")
+        return
+    known_files = list(state.files.keys())
     if args.items:
         paths_to_review = [
             (known_files[int(item) - 1] if item.isdigit() else None)
@@ -19,7 +22,13 @@ def impl(args: argparse.Namespace, context: Context):
     if args.todo:
         paths_to_review = [
             path for path in paths_to_review 
-            if path and state and not state.is_file_reviewed(path)
+            if path and not state.is_file_reviewed(path)
+        ]
+    
+    if hasattr(args, 'loc_lte') and args.loc_lte is not None:
+        paths_to_review = [
+            path for path in paths_to_review
+            if path and state.lines_of_file(path) is not None and state.lines_of_file(path) <= args.loc_lte
         ]
     
     cmdv0 = CommandsV0(
@@ -35,4 +44,5 @@ def register(sub: argparse._SubParsersAction):
     review = sub.add_parser("review")
     review.add_argument("items", nargs="*")
     review.add_argument("--todo", action="store_true", help="Only review unreviewed files")
+    review.add_argument("--loc-lte", type=int, help="Only review files with lines changed <= this number")
     review.set_defaults(impl=impl)

@@ -11,6 +11,8 @@ st = "status"
 i  = "interactive --auto-yes"
 # Short aliases are useful for interactive mode.
 lt = "ls --todo"
+# Use whatever mnemonics work for you.
+smol = "review --loc-lte 10"
 
 # Include jira info to include URLs to tickets.
 [jira]
