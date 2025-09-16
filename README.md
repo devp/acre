@@ -66,3 +66,8 @@ One of:
 * awesome code review e-ssistant *(really?)*
 * acre = ACRE Code Review via ECRA *(wow.)*
   * ECRA = enhanced command-line routine for ACRE *(WOW.)*
+
+## Credits
+
+Thanks to my lovely spouse, @labmouse, for encouraging me to follow my inspirations (and for
+laughing with me at my corny programming jokes).
