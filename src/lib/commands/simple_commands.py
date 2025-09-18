@@ -52,7 +52,7 @@ def impl_metadata(context: Context, **_):
     state = context.state_manager.load_state(context.key)
     if not state:
         print(f"No review state found for {context.key}")
-        return
+        exit(1)
     print(json.dumps(state.metadata, indent=2))
 
 def register(sub: argparse._SubParsersAction):
