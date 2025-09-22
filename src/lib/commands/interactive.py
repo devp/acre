@@ -1,4 +1,6 @@
 import argparse
+import os
+import readline
 import shlex
 
 from cli.context import Context
@@ -26,6 +28,37 @@ def _build_interactive_parser():
     return p
 
 
+def _setup_readline():
+    """Setup readline for command history and keyboard shortcuts"""
+    # Enable tab completion (if available)
+    try:
+        readline.parse_and_bind("tab: complete")
+    except:
+        pass
+    
+    # Enable Emacs-style keyboard shortcuts (Ctrl-A, Ctrl-E, etc.)
+    readline.parse_and_bind("set editing-mode emacs")
+    
+    # Load command history from file
+    history_file = os.path.expanduser("~/.acre_history")
+    try:
+        readline.read_history_file(history_file)
+        # Limit history size
+        readline.set_history_length(1000)
+    except FileNotFoundError:
+        pass
+    
+    return history_file
+
+
+def _save_history(history_file):
+    """Save command history to file"""
+    try:
+        readline.write_history_file(history_file)
+    except:
+        pass
+
+
 def impl_interactive(context: Context, args=None, **_):
     print("Entering interactive mode.")
     
@@ -40,26 +73,34 @@ def impl_interactive(context: Context, args=None, **_):
             print("Cannot proceed without initialized review. Exiting.")
             return
     
+    # Setup readline for interactive features
+    history_file = _setup_readline()
+    
     parser = _build_interactive_parser()
-    while True:
-        try:
-            impl_status(context=context)
-            line = input("> ")
-            if not line.strip():
-                break
+    try:
+        while True:
             try:
-                raw_args = shlex.split(line)
-                expanded_args = resolve_cmd_from_config_aliases(cmd=raw_args[0], config=context.config) + raw_args[1:]
-                args = parser.parse_args(args=expanded_args)
-                if "impl" in args:
-                    args.impl(args=args, context=context)
-                else:
-                    print("Command not implemented.", args)
-            except SystemExit:
-                # Argparse calls exit() on --help or errors, so we catch it
-                pass
-        except EOFError:
-            break
+                impl_status(context=context)
+                line = input("> ")
+                if not line.strip():
+                    break
+                try:
+                    raw_args = shlex.split(line)
+                    expanded_args = resolve_cmd_from_config_aliases(cmd=raw_args[0], config=context.config) + raw_args[1:]
+                    args = parser.parse_args(args=expanded_args)
+                    if "impl" in args:
+                        args.impl(args=args, context=context)
+                    else:
+                        print("Command not implemented.", args)
+                except SystemExit:
+                    # Argparse calls exit() on --help or errors, so we catch it
+                    pass
+            except EOFError:
+                break
+    finally:
+        # Save command history when exiting
+        _save_history(history_file)
+        
     print("Exiting interactive mode.")
 
 
