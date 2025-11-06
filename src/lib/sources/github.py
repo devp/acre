@@ -1,20 +1,9 @@
-from dataclasses import dataclass, field
 import json
 import subprocess
-from typing import List, Optional
 
-from lib.sources.git import get_name_rev
+from lib.sources.git import GitData, get_name_rev
 
-@dataclass
-class GHData:
-    title: Optional[str] = None
-    body: Optional[str] = None
-    number: Optional[int] = None
-    files: List[str] = field(default_factory=list)
-    lines_changed: dict[str, int] = field(default_factory=dict)
-    base_commit: Optional[str] = None
-    head_commit: Optional[str] = None
-
+GHData = GitData
 
 def data_from_gh(retry_remote_branch=False):
     try:
