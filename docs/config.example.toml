@@ -23,3 +23,10 @@ smol = "review --loc-lte 10"
 # Include jira info to include URLs to tickets.
 [jira]
 base = "your-corp"
+
+# Review behavior for test files.
+[review]
+# Test file detection: matched against the file basename.
+test_file_patterns = ["^test_", "_test(\\.[^.]+)?$"]
+# Test diff filtering (grep -E): matched against changed lines (+/- prefixed).
+test_diff_patterns = ["^[[:space:]]*(async[[:space:]]+def|def)[[:space:]]+test_"]

@@ -61,8 +61,13 @@ def impl(args: argparse.Namespace, context: Context):
     )
 
     skim_mode = bool(hasattr(args, 'skim') and args.skim)
+    test_diff_first = bool(hasattr(args, "test_diff_first") and args.test_diff_first)
     for path in paths_to_review:
-        cmdv0.cmd_review(path=path, ask_approve=(False if skim_mode else True))
+        cmdv0.cmd_review(
+            path=path,
+            ask_approve=(False if skim_mode else True),
+            test_diff_first=test_diff_first,
+        )
     if skim_mode:
         if yn("Approve all files?"):
             for path in paths_to_review:
@@ -78,4 +83,10 @@ def register(sub: argparse._SubParsersAction):
     review.add_argument("--todo", action="store_true", help="Only review unreviewed files")
     review.add_argument("--skim", action="store_true", help="Show all diffs and ask for approval as a whole")
     review.add_argument("--loc-lte", type=int, help="Only review files with lines changed <= this number")
+    review.add_argument(
+        "--test-diff-first",
+        dest="test_diff_first",
+        action="store_true",
+        help="For test files (per config review.test_file_patterns), show a filtered diff subset (review.test_diff_patterns) before the full diff",
+    )
     review.set_defaults(impl=impl)

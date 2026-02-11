@@ -14,6 +14,25 @@ def load_config() -> Dict:
                 pass
     return {}
 
+def get_review_test_file_patterns(config: Dict) -> Optional[list[str]]:
+    review = config.get("review")
+    if not isinstance(review, dict):
+        return None
+    patterns = review.get("test_file_patterns")
+    if not isinstance(patterns, list) or not all(isinstance(p, str) for p in patterns):
+        return None
+    return patterns
+
+
+def get_review_test_diff_patterns(config: Dict) -> Optional[list[str]]:
+    review = config.get("review")
+    if not isinstance(review, dict):
+        return None
+    patterns = review.get("test_diff_patterns")
+    if not isinstance(patterns, list) or not all(isinstance(p, str) for p in patterns):
+        return None
+    return patterns
+
 def resolve_cmd_from_config_aliases(cmd: str, config: Dict) -> List[str]:
     aliases = config.get("aliases")
     if aliases:

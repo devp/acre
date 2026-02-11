@@ -1,6 +1,10 @@
+import os
+import re
+
 from cli.pretty import print_whimsically
 from cli.util import mark_reviewed_prompt, yn
-from lib.sources.git import diff
+from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
+from lib.sources.git import diff, diff_filtered
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
 from lib.state import StateManager
@@ -67,11 +71,38 @@ class CommandsV0:
         else:
             print(text)
 
-    def cmd_review(self, path, mode="default", ask_approve=True):
+    def cmd_review(self, path, mode="default", ask_approve=True, test_diff_first: bool = False):
         """Reviews a single file"""
         if self.state.is_file_reviewed(path):
             print(f"{path} already reviewed")
             return False
+        if test_diff_first:
+            file_patterns = get_review_test_file_patterns(self.config)
+            diff_patterns = get_review_test_diff_patterns(self.config)
+            if file_patterns and diff_patterns:
+                basename = os.path.basename(path)
+                try:
+                    compiled = [re.compile(p) for p in file_patterns]
+                except re.error:
+                    compiled = []
+                if compiled and any(r.search(basename) for r in compiled):
+                    print("\nTest diff subset (matched by review.test_diff_patterns):")
+                    printed = diff_filtered(
+                        path,
+                        diff_target=self.state.diff_target(),
+                        line_patterns=diff_patterns,
+                    )
+                    if printed == 0:
+                        print("(no matches)")
+                    print("")
+                    if ask_approve:
+                        ans = input("approve [y/R] ").strip().lower()
+                        if ans in {"y", "yes"}:
+                            self.state_manager.mark_file_reviewed(self.state, path)
+                            self.state_manager.save_state(self.state)
+                            lines = self.state.lines_of_file(path)
+                            print(f"> Marked {lines} lines as reviewed (test preview)")
+                            return True
         diff(path, diff_target=self.state.diff_target())
         if not ask_approve:
             return
