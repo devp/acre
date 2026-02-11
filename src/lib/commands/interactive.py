@@ -37,7 +37,10 @@ def _setup_readline():
         pass
     
     # Enable Emacs-style keyboard shortcuts (Ctrl-A, Ctrl-E, etc.)
-    readline.parse_and_bind("set editing-mode emacs")
+    try:
+        readline.parse_and_bind("set editing-mode emacs")
+    except Exception:
+        pass
     
     # Load command history from file
     history_file = os.path.expanduser("~/.acre_history")
@@ -45,7 +48,7 @@ def _setup_readline():
         readline.read_history_file(history_file)
         # Limit history size
         readline.set_history_length(1000)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError, OSError):
         pass
     
     return history_file
