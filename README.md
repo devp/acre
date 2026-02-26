@@ -43,7 +43,7 @@ Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)
 - `gh`
 + for development:
     - justfile (to run tasks; or you can read the file and run them yourself)
-    - poetry (only to run the tasks above; currently, no dependencies for the script itself)
+    - uv (to run the tasks; `uv sync --dev`, then `just test`)
 
 ## Roadmap
 

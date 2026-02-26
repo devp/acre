@@ -1,10 +1,10 @@
 default: typecheck lintfix test
 
 typecheck:
-  poetry run pyright
+  PYTHONPATH=src uv run pyright
 
 lintfix:
-  poetry run ruff check --fix
+  uv run ruff check --fix
 
 test:
-  poetry run pytest
+  PYTHONPATH=src uv run pytest
