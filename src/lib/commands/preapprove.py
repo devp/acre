@@ -31,7 +31,8 @@ def impl(args: argparse.Namespace, context: Context):
     if args.hunk is not None:
         diff_target = state.diff_target()
         lines = diff_lines(path, diff_target=diff_target)
-        start_line, end_line = _get_hunk_line_range(lines, hunk_index=args.hunk)
+        hunk_index = _parse_hunk_selector(args.hunk)
+        start_line, end_line = _get_hunk_line_range(lines, hunk_index=hunk_index)
         notes = args.notes or ""
     else:
         if start_line is None or end_line is None:
@@ -75,6 +76,20 @@ def _get_hunk_line_range(diff_lines_for_file: list[str], *, hunk_index: int) -> 
     return (hunk_start, hunk_end)
 
 
+def _parse_hunk_selector(raw: str) -> int:
+    # Accept either plain integers ("1") or the review display form ("H01").
+    s = raw.strip()
+    if s.lower().startswith("h"):
+        s = s[1:]
+    try:
+        idx = int(s)
+    except ValueError as e:
+        raise Exception(f"Invalid hunk selector: {raw}") from e
+    if idx < 1:
+        raise Exception(f"Invalid hunk index: {idx}")
+    return idx
+
+
 def register(sub: argparse._SubParsersAction):
     cmd = sub.add_parser(
         "preapprove",
@@ -86,6 +101,9 @@ def register(sub: argparse._SubParsersAction):
     )
     cmd.add_argument("start_line", type=int, nargs="?", help="Start diff-output line (1-based)")
     cmd.add_argument("end_line", type=int, nargs="?", help="End diff-output line (1-based, inclusive)")
-    cmd.add_argument("--hunk", type=int, help="Preapprove an entire hunk by 1-based hunk index")
+    cmd.add_argument(
+        "--hunk",
+        help="Preapprove an entire hunk by index (e.g. 1) or by displayed label (e.g. H01)",
+    )
     cmd.add_argument("--notes", help="Optional note for this preapproval", default="")
     cmd.set_defaults(impl=impl)
