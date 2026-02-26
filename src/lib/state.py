@@ -122,6 +122,22 @@ class StateManager:
             raise Exception(f"Not found for approval: {f}")
         f.approved_sha = self.current_sha
 
+    def add_preapproved_block(
+        self,
+        state: ReviewState,
+        *,
+        path: str,
+        start_line: int,
+        end_line: int,
+        notes: str = "",
+    ) -> None:
+        f = state.files.get(path)
+        if f is None:
+            raise Exception(f"Not found for preapproval: {path}")
+        f.preapproved_blocks.append(
+            PreApprovalBlock(start_line=start_line, end_line=end_line, notes=notes)
+        )
+
     def delete_state(self, review_id: str) -> None:
         """Permanently delete the review state file"""
         state_file = self.state_file_path(review_id)
