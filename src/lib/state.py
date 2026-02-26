@@ -138,6 +138,12 @@ class StateManager:
             PreApprovalBlock(start_line=start_line, end_line=end_line, notes=notes)
         )
 
+    def clear_preapproved_blocks(self, state: ReviewState, *, path: str) -> None:
+        f = state.files.get(path)
+        if f is None:
+            raise Exception(f"Not found for preapproval: {path}")
+        f.preapproved_blocks = []
+
     def delete_state(self, review_id: str) -> None:
         """Permanently delete the review state file"""
         state_file = self.state_file_path(review_id)

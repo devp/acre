@@ -26,6 +26,12 @@ def impl(args: argparse.Namespace, context: Context):
             raise Exception(f"Invalid file index: {idx}")
         path = known_files[idx - 1]
 
+    if args.clear:
+        context.state_manager.clear_preapproved_blocks(state, path=path)
+        context.state_manager.save_state(state)
+        print(f"> Cleared preapprovals for {path}")
+        return
+
     start_line = args.start_line
     end_line = args.end_line
     if args.hunk is not None:
@@ -104,6 +110,11 @@ def register(sub: argparse._SubParsersAction):
     cmd.add_argument(
         "--hunk",
         help="Preapprove an entire hunk by index (e.g. 1) or by displayed label (e.g. H01)",
+    )
+    cmd.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear all preapproved blocks for the specified file",
     )
     cmd.add_argument("--notes", help="Optional note for this preapproval", default="")
     cmd.set_defaults(impl=impl)
