@@ -33,7 +33,7 @@ def _setup_readline():
     # Enable tab completion (if available)
     try:
         readline.parse_and_bind("tab: complete")
-    except:
+    except Exception:
         pass
     
     # Enable Emacs-style keyboard shortcuts (Ctrl-A, Ctrl-E, etc.)
@@ -58,7 +58,7 @@ def _save_history(history_file):
     """Save command history to file"""
     try:
         readline.write_history_file(history_file)
-    except:
+    except Exception:
         pass
 
 
