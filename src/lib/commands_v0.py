@@ -88,9 +88,12 @@ class CommandsV0:
             lines = filter_diff_hunks_by_regex(
                 lines, pattern=focus_regex, include_context=regex_include_context
             )
-        excluded: set[int] = set()
-        if file_state and file_state.preapproved_blocks:
-            excluded = excluded_diff_line_numbers(preapproved_blocks=file_state.preapproved_blocks)
+        preapproved_blocks = file_state.preapproved_blocks if file_state else []
+        excluded = (
+            excluded_diff_line_numbers(preapproved_blocks=preapproved_blocks)
+            if preapproved_blocks
+            else set()
+        )
 
         if show_diff_line_numbers:
             # Keep diff line numbers stable: numbers always refer to the rendered diff
@@ -103,7 +106,7 @@ class CommandsV0:
             lines = rendered
         else:
             if excluded:
-                lines = filter_diff_lines(lines, preapproved_blocks=file_state.preapproved_blocks)
+                lines = filter_diff_lines(lines, preapproved_blocks=preapproved_blocks)
         print("".join(lines), end="")
         if not ask_approve:
             return
