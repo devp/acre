@@ -26,10 +26,10 @@ def test_preapprove_hunk_records_hunk_line_range(tmp_path, monkeypatch):
             "diff --git a/f.py b/f.py\n",
             "--- a/f.py\n",
             "+++ b/f.py\n",
-            "@@ -1,1 +1,1 @@\n",
+            "\x1b[36m@@ -1,1 +1,1 @@\x1b[0m\n",
             "-old\n",
             "+new\n",
-            "@@ -10,1 +10,1 @@\n",
+            "\x1b[36m@@ -10,1 +10,1 @@\x1b[0m\n",
             "-foo\n",
             "+bar\n",
         ],
@@ -43,4 +43,3 @@ def test_preapprove_hunk_records_hunk_line_range(tmp_path, monkeypatch):
     raw = json.loads((tmp_path / ".git" / "acre" / "r1.json").read_text())
     blocks = raw["files"]["f.py"]["preapproved_blocks"]
     assert blocks == [{"start_line": 4, "end_line": 6, "notes": ""}]
-
