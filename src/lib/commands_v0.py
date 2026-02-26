@@ -1,6 +1,6 @@
 from cli.pretty import print_whimsically
 from cli.util import yn
-from lib.diff_filter import filter_diff_lines
+from lib.diff_filter import excluded_diff_line_numbers, filter_diff_lines
 from lib.hunk_filter import filter_diff_hunks_by_regex
 from lib.sources.git import diff_lines
 from lib.sources.github import data_from_gh
@@ -88,10 +88,22 @@ class CommandsV0:
             lines = filter_diff_hunks_by_regex(
                 lines, pattern=focus_regex, include_context=regex_include_context
             )
+        excluded: set[int] = set()
         if file_state and file_state.preapproved_blocks:
-            lines = filter_diff_lines(lines, preapproved_blocks=file_state.preapproved_blocks)
+            excluded = excluded_diff_line_numbers(preapproved_blocks=file_state.preapproved_blocks)
+
         if show_diff_line_numbers:
-            lines = [f"{idx:3d}: {line}" for idx, line in enumerate(lines, start=1)]
+            # Keep diff line numbers stable: numbers always refer to the rendered diff
+            # output *before* applying preapprovals.
+            rendered = []
+            for idx, line in enumerate(lines, start=1):
+                if idx in excluded:
+                    continue
+                rendered.append(f"{idx:3d}: {line}")
+            lines = rendered
+        else:
+            if excluded:
+                lines = filter_diff_lines(lines, preapproved_blocks=file_state.preapproved_blocks)
         print("".join(lines), end="")
         if not ask_approve:
             return
