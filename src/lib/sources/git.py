@@ -68,6 +68,17 @@ def diff(path, diff_target = "main"):
     args = ["git", "diff", diff_target, "--", path]
     subprocess.run(args)
 
+
+def diff_lines(path: str, diff_target: str = "main") -> list[str]:
+    result = subprocess.run(
+        ["git", "diff", diff_target, "--", path],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    # `git diff` uses exit code 1 to indicate differences; we still want output.
+    return result.stdout.splitlines(keepends=True)
+
 def get_files_in_range(git_range: str) -> list[str]:
     """Get list of files changed in a git range"""
     try:

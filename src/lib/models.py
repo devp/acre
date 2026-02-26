@@ -3,6 +3,9 @@ from typing import Dict, List, Optional
 
 @dataclass
 class PreApprovalBlock:
+    # NOTE: `start_line`/`end_line` are 1-based line numbers in the rendered
+    # `git diff` output for a *single file* (as displayed by `acre review`),
+    # not source-file line numbers.
     start_line: int
     end_line: int
     notes: Optional[str] = None

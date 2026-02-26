@@ -1,6 +1,7 @@
 from cli.pretty import print_whimsically
 from cli.util import yn
-from lib.sources.git import diff
+from lib.diff_filter import filter_diff_lines
+from lib.sources.git import diff_lines
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
 from lib.state import StateManager
@@ -72,7 +73,11 @@ class CommandsV0:
         if self.state.is_file_reviewed(path):
             print(f"{path} already reviewed")
             return False
-        diff(path, diff_target=self.state.diff_target())
+        file_state = self.state.files.get(path)
+        lines = diff_lines(path, diff_target=self.state.diff_target())
+        if file_state and file_state.preapproved_blocks:
+            lines = filter_diff_lines(lines, preapproved_blocks=file_state.preapproved_blocks)
+        print("".join(lines), end="")
         if not ask_approve:
             return
         if not yn("Mark reviewed?"):
