@@ -19,7 +19,7 @@ is related to a Github PR (i.e. `gh pr checkout`).
 
 ```
 usage: codereview.py [-h]
-                     {init,status,ls,overview,reset,review,interactive} ...
+                     {init,status,ls,overview,reset,review,interactive,preapprove} ...
 
 positional arguments:
   {init,status,ls,overview,reset,review,interactive}
@@ -29,12 +29,19 @@ positional arguments:
                         numbered indexes
     reset               Reset the progress of the code review
     interactive         Starts an interactive session
+    preapprove          Hide a range of rendered diff output lines for a file during review
 
 options:
   -h, --help            show this help message and exit
 ```
 
 Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)
+
+### Preapproving blocks
+
+For long/verbose diffs, you can "preapprove" (hide) parts of a file's rendered diff output by line range:
+
+`codereview.py preapprove path/to/file.py 10 42 --notes "already looked at this"`
 
 ## Requirements
 

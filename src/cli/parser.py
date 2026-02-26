@@ -8,6 +8,7 @@ from lib.commands.init import register as register_init
 from lib.commands.review import register as register_review
 from lib.commands.simple_commands import register as register_simple
 from lib.commands.interactive import register as register_interactive
+from lib.commands.preapprove import register as register_preapprove
 from lib.config.config import get_default_commands
 
 
@@ -39,6 +40,7 @@ def _build_argparse():
     register_simple(sub)
     register_review(sub)
     register_interactive(sub)
+    register_preapprove(sub)
     return p
 
 _ArgParser = _build_argparse()
