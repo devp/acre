@@ -71,9 +71,9 @@ def filter_diff_hunks_by_regex(
     kept: list[list[str]] = []
     for hunk in hunks:
         matched = any(
-            rx.search(_strip_ansi(l)[1:].rstrip("\n")) is not None
-            for l in hunk
-            if line_is_matchable(l)
+            rx.search(_strip_ansi(hunk_line)[1:].rstrip("\n")) is not None
+            for hunk_line in hunk
+            if line_is_matchable(hunk_line)
         )
         if matched:
             kept.append(hunk)

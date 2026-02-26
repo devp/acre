@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-
 
 def test_review_focus_regex_filters_output_to_matching_hunks(tmp_path, monkeypatch, capsys):
     (tmp_path / ".git").mkdir()

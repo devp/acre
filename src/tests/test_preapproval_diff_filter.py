@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_filter_diff_lines_excludes_preapproved_blocks():
     # Diff "line numbers" here refer to the rendered diff output for a single file,
     # not source-file line numbers.
@@ -37,4 +34,3 @@ def test_filter_diff_lines_keeps_everything_when_no_blocks():
     from lib.diff_filter import filter_diff_lines  # noqa: PLC0415
 
     assert filter_diff_lines(diff_lines, preapproved_blocks=[]) == diff_lines
-
