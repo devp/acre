@@ -71,7 +71,7 @@ def diff(path, diff_target = "main"):
 
 def diff_lines(path: str, diff_target: str = "main") -> list[str]:
     result = subprocess.run(
-        ["git", "diff", diff_target, "--", path],
+        ["git", "diff", "--color=always", diff_target, "--", path],
         check=False,
         capture_output=True,
         text=True,
