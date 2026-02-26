@@ -1,6 +1,7 @@
 from cli.pretty import print_whimsically
 from cli.util import yn
 from lib.diff_filter import filter_diff_lines
+from lib.hunk_filter import filter_diff_hunks_by_regex
 from lib.sources.git import diff_lines
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
@@ -68,13 +69,24 @@ class CommandsV0:
         else:
             print(text)
 
-    def cmd_review(self, path, mode="default", ask_approve=True):
+    def cmd_review(
+        self,
+        path,
+        mode="default",
+        ask_approve=True,
+        focus_regex: str | None = None,
+        regex_include_context: bool = False,
+    ):
         """Reviews a single file"""
         if self.state.is_file_reviewed(path):
             print(f"{path} already reviewed")
             return False
         file_state = self.state.files.get(path)
         lines = diff_lines(path, diff_target=self.state.diff_target())
+        if focus_regex:
+            lines = filter_diff_hunks_by_regex(
+                lines, pattern=focus_regex, include_context=regex_include_context
+            )
         if file_state and file_state.preapproved_blocks:
             lines = filter_diff_lines(lines, preapproved_blocks=file_state.preapproved_blocks)
         print("".join(lines), end="")

@@ -43,7 +43,12 @@ def impl(args: argparse.Namespace, context: Context):
 
     skim_mode = bool(hasattr(args, 'skim') and args.skim)
     for path in paths_to_review:
-        cmdv0.cmd_review(path=path, ask_approve=(False if skim_mode else True))
+        cmdv0.cmd_review(
+            path=path,
+            ask_approve=(False if skim_mode else True),
+            focus_regex=getattr(args, "focus_regex", None),
+            regex_include_context=bool(getattr(args, "regex_include_context", False)),
+        )
     if skim_mode:
         if yn("Approve all files?"):
             for path in paths_to_review:
@@ -58,5 +63,11 @@ def register(sub: argparse._SubParsersAction):
         "If none provided, review all files.")
     review.add_argument("--todo", action="store_true", help="Only review unreviewed files")
     review.add_argument("--skim", action="store_true", help="Show all diffs and ask for approval as a whole")
+    review.add_argument("--focus-regex", help="Only show hunks where changed lines match this regex")
+    review.add_argument(
+        "--regex-include-context",
+        action="store_true",
+        help="Also consider context lines when matching --focus-regex",
+    )
     review.add_argument("--loc-lte", type=int, help="Only review files with lines changed <= this number")
     review.set_defaults(impl=impl)

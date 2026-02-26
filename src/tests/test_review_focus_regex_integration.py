@@ -36,12 +36,12 @@ def test_review_focus_regex_filters_output_to_matching_hunks(tmp_path, monkeypat
         ]
 
     monkeypatch.setattr("lib.commands_v0.diff_lines", fake_diff_lines)
+    monkeypatch.setattr("lib.commands.review.yn", lambda *_, **__: False)
 
     from cli.parser import parse_args_from_cli  # noqa: PLC0415
 
-    parse_args_from_cli(context=ctx, override_args=["review", "f.py", "--focus-regex", "match", "--skim"])
+    parse_args_from_cli(context=ctx, override_args=["review", "1", "--focus-regex", "match", "--skim"])
 
     out = capsys.readouterr().out
     assert "+new match" in out
     assert "+bar" not in out
-
