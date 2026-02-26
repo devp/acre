@@ -1,7 +1,7 @@
 from cli.pretty import print_whimsically
 from cli.util import yn
 from lib.diff_filter import excluded_diff_line_numbers, filter_diff_lines
-from lib.hunk_filter import filter_diff_hunks_by_regex
+from lib.hunk_filter import _strip_ansi, filter_diff_hunks_by_regex
 from lib.sources.git import diff_lines
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
@@ -77,6 +77,7 @@ class CommandsV0:
         focus_regex: str | None = None,
         regex_include_context: bool = False,
         show_diff_line_numbers: bool = False,
+        show_hunk_numbers: bool = False,
     ):
         """Reviews a single file"""
         if self.state.is_file_reviewed(path):
@@ -99,14 +100,29 @@ class CommandsV0:
             # Keep diff line numbers stable: numbers always refer to the rendered diff
             # output *before* applying preapprovals.
             rendered = []
+            hunk_idx = 0
             for idx, line in enumerate(lines, start=1):
                 if idx in excluded:
                     continue
-                rendered.append(f"{idx:3d}: {line}")
+                prefix = f"{idx:3d}: "
+                if show_hunk_numbers and _strip_ansi(line).startswith("@@"):
+                    hunk_idx += 1
+                    prefix = f"{prefix}H{hunk_idx:02d} "
+                rendered.append(f"{prefix}{line}")
             lines = rendered
         else:
             if excluded:
                 lines = filter_diff_lines(lines, preapproved_blocks=preapproved_blocks)
+            if show_hunk_numbers:
+                rendered = []
+                hunk_idx = 0
+                for line in lines:
+                    if _strip_ansi(line).startswith("@@"):
+                        hunk_idx += 1
+                        rendered.append(f"H{hunk_idx:02d} {line}")
+                    else:
+                        rendered.append(line)
+                lines = rendered
         print("".join(lines), end="")
         if not ask_approve:
             return

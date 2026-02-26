@@ -39,6 +39,5 @@ def test_review_hunk_numbers_annotates_hunk_headers(tmp_path, monkeypatch, capsy
     parse_args_from_cli(context=ctx, override_args=["review", "1", "--skim", "--hunk-numbers"])
 
     out = capsys.readouterr().out
-    assert "H1" in out
-    assert "H2" in out
-
+    assert "H01" in out
+    assert "H02" in out
