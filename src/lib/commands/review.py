@@ -48,6 +48,7 @@ def impl(args: argparse.Namespace, context: Context):
             ask_approve=(False if skim_mode else True),
             focus_regex=getattr(args, "focus_regex", None),
             regex_include_context=bool(getattr(args, "regex_include_context", False)),
+            show_diff_line_numbers=bool(getattr(args, "diff_line_numbers", False)),
         )
     if skim_mode:
         if yn("Approve all files?"):
@@ -68,6 +69,11 @@ def register(sub: argparse._SubParsersAction):
         "--regex-include-context",
         action="store_true",
         help="Also consider context lines when matching --focus-regex",
+    )
+    review.add_argument(
+        "--diff-line-numbers",
+        action="store_true",
+        help="Prefix the rendered diff output with 1-based line numbers (to guide `preapprove` ranges)",
     )
     review.add_argument("--loc-lte", type=int, help="Only review files with lines changed <= this number")
     review.set_defaults(impl=impl)

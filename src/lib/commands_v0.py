@@ -76,6 +76,7 @@ class CommandsV0:
         ask_approve=True,
         focus_regex: str | None = None,
         regex_include_context: bool = False,
+        show_diff_line_numbers: bool = False,
     ):
         """Reviews a single file"""
         if self.state.is_file_reviewed(path):
@@ -89,6 +90,8 @@ class CommandsV0:
             )
         if file_state and file_state.preapproved_blocks:
             lines = filter_diff_lines(lines, preapproved_blocks=file_state.preapproved_blocks)
+        if show_diff_line_numbers:
+            lines = [f"{idx:3d}: {line}" for idx, line in enumerate(lines, start=1)]
         print("".join(lines), end="")
         if not ask_approve:
             return

@@ -22,6 +22,7 @@ def test_review_diff_line_numbers_prefixes_output_lines(tmp_path, monkeypatch, c
         "lib.commands_v0.diff_lines",
         lambda *_args, **_kwargs: ["a\n", "b\n"],
     )
+    monkeypatch.setattr("lib.commands.review.yn", lambda *_, **__: False)
 
     from cli.parser import parse_args_from_cli  # noqa: PLC0415
 
@@ -33,4 +34,3 @@ def test_review_diff_line_numbers_prefixes_output_lines(tmp_path, monkeypatch, c
     out = capsys.readouterr().out
     assert "  1:" in out
     assert "  2:" in out
-

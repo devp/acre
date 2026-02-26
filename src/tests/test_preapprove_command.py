@@ -34,4 +34,3 @@ def test_preapprove_command_adds_block(tmp_path, monkeypatch, capsys):
     raw = json.loads((tmp_path / ".git" / "acre" / "r1.json").read_text())
     blocks = raw["files"]["f.py"]["preapproved_blocks"]
     assert blocks == [{"start_line": 10, "end_line": 12, "notes": "skip"}]
-
