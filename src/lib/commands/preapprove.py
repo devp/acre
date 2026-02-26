@@ -1,7 +1,15 @@
 import argparse
+import re
 
 from cli.context import Context
 from lib.sources.git import diff_lines
+
+
+_ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+
+def _strip_ansi(s: str) -> str:
+    return _ANSI_ESCAPE_RE.sub("", s)
 
 
 def impl(args: argparse.Namespace, context: Context):
@@ -50,7 +58,7 @@ def _get_hunk_line_range(diff_lines_for_file: list[str], *, hunk_index: int) -> 
     hunk_end: int | None = None
 
     for idx, line in enumerate(diff_lines_for_file, start=1):
-        if line.startswith("@@"):
+        if _strip_ansi(line).startswith("@@"):
             current += 1
             if current == hunk_index:
                 hunk_start = idx

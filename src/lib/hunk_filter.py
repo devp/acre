@@ -4,6 +4,13 @@ import re
 from typing import List
 
 
+_ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+
+def _strip_ansi(s: str) -> str:
+    return _ANSI_ESCAPE_RE.sub("", s)
+
+
 def filter_diff_hunks_by_regex(
     diff_lines: List[str],
     *,
@@ -30,7 +37,7 @@ def filter_diff_hunks_by_regex(
     saw_hunk = False
 
     for line in diff_lines:
-        if line.startswith("@@"):
+        if _strip_ansi(line).startswith("@@"):
             saw_hunk = True
             if current_hunk is not None:
                 hunks.append(current_hunk)
@@ -52,18 +59,19 @@ def filter_diff_hunks_by_regex(
     def line_is_matchable(hunk_line: str) -> bool:
         if not hunk_line:
             return False
-        if hunk_line.startswith(("+++ ", "--- ")):
+        stripped = _strip_ansi(hunk_line)
+        if stripped.startswith(("+++ ", "--- ")):
             return False
-        if hunk_line[0] in {"+", "-"}:
+        if stripped[0] in {"+", "-"}:
             return True
-        if include_context and hunk_line[0] == " ":
+        if include_context and stripped[0] == " ":
             return True
         return False
 
     kept: list[list[str]] = []
     for hunk in hunks:
         matched = any(
-            rx.search(l[1:].rstrip("\n")) is not None
+            rx.search(_strip_ansi(l)[1:].rstrip("\n")) is not None
             for l in hunk
             if line_is_matchable(l)
         )
@@ -78,4 +86,3 @@ def filter_diff_hunks_by_regex(
     for hunk in kept:
         out.extend(hunk)
     return out
-
