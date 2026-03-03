@@ -4,6 +4,12 @@
 # Default commands to run when no command is specified
 default_commands = "status"
 
+# In interactive mode, if you enter only positional args (e.g. "1 2 3"),
+# acre can assume you meant to pass them to this command.
+# Example: default_interact_command_for_args = "review"
+# Example: default_interact_command_for_args = "review --todo"
+# default_interact_command_for_args = "review"
+
 [aliases]
 # Example alias: `st` will be expanded to `status`
 st = "status"

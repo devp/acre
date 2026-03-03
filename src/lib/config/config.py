@@ -1,7 +1,7 @@
 import os
 import shlex
 import tomllib
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 def load_config() -> Dict:
     # TODO: accept an override, either from script and os envs or for tests
@@ -29,3 +29,18 @@ def get_default_commands(config: Dict) -> List[str]:
         elif isinstance(default_commands, list):
             return default_commands
     return []
+
+def get_default_interact_command_for_args(config: Dict) -> Optional[List[str]]:
+    """
+    Returns a command (as argv tokens) to prepend in interactive mode when the user
+    enters only positional args (e.g. "1 2 3"). If unset, returns None.
+    """
+    raw = config.get("default_interact_command_for_args")
+    if not raw:
+        return None
+    if isinstance(raw, str):
+        tokens = shlex.split(raw)
+        return tokens if tokens else None
+    if isinstance(raw, list):
+        return raw if raw else None
+    return None
