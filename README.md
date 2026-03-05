@@ -69,5 +69,5 @@ One of:
 
 ## Credits
 
-Thanks to my lovely spouse, @labmouse, for encouraging me to follow my inspirations (and for
-laughing with me at my corny programming jokes).
+Thanks to my lovely spouse, @labmouse, for encouraging me to follow my inspirations
+(and for laughing with me at my corny programming jokes).
