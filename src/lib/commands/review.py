@@ -5,35 +5,54 @@ from cli.util import yn
 from lib.commands_v0 import CommandsV0
 
 
+def _select_paths_to_review(
+    *,
+    known_files: list[str],
+    state,
+    items: list[str] | None,
+    todo: bool,
+    loc_lte: int | None,
+) -> list[str]:
+    if items:
+        resolved: list[str] = []
+        for item in items:
+            if item.isdigit():
+                idx = int(item) - 1
+                if 0 <= idx < len(known_files):
+                    resolved.append(known_files[idx])
+                continue
+            if item in known_files:
+                resolved.append(item)
+        paths_to_review = resolved
+    else:
+        paths_to_review = list(known_files)
+
+    if todo:
+        paths_to_review = [p for p in paths_to_review if p and not state.is_file_reviewed(p)]
+
+    if loc_lte is not None:
+        paths_to_review = [
+            p
+            for p in paths_to_review
+            if p and state.lines_of_file(p) is not None and state.lines_of_file(p) <= loc_lte
+        ]
+
+    return paths_to_review
+
+
 def impl(args: argparse.Namespace, context: Context):
     state = context.state_manager.load_state(context.key)
     if not state:
         print("No state file found. Run 'init' first.")
         return
     known_files = list(state.files.keys())
-    if args.items:
-        paths_to_review = [
-                path
-                for path in [
-                    (known_files[int(item) - 1] if item.isdigit() else None)
-                    for item in args.items
-                ]
-                if path is not None
-        ]
-    else:
-        paths_to_review = known_files
-    
-    if args.todo:
-        paths_to_review = [
-            path for path in paths_to_review 
-            if path and not state.is_file_reviewed(path)
-        ]
-    
-    if hasattr(args, 'loc_lte') and args.loc_lte is not None:
-        paths_to_review = [
-            path for path in paths_to_review
-            if path and state.lines_of_file(path) is not None and state.lines_of_file(path) <= args.loc_lte
-        ]
+    paths_to_review = _select_paths_to_review(
+        known_files=known_files,
+        state=state,
+        items=list(args.items) if getattr(args, "items", None) else None,
+        todo=bool(getattr(args, "todo", False)),
+        loc_lte=getattr(args, "loc_lte", None),
+    )
     
     cmdv0 = CommandsV0(
         key=context.key,
