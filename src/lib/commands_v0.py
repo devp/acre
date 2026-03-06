@@ -1,5 +1,5 @@
 from cli.pretty import print_whimsically
-from cli.util import yn
+from cli.util import mark_reviewed_prompt, yn
 from lib.sources.git import diff
 from lib.sources.github import data_from_gh
 from lib.sources.jira import find_jira_tag
@@ -75,7 +75,7 @@ class CommandsV0:
         diff(path, diff_target=self.state.diff_target())
         if not ask_approve:
             return
-        if not yn("Mark reviewed?"):
+        if not mark_reviewed_prompt(path=path, prompt="Mark reviewed?"):
             return
         self.state_manager.mark_file_reviewed(self.state, path)
         self.state_manager.save_state(self.state)

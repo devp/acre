@@ -7,7 +7,6 @@
 
 ## Features
 
-- open editor for file (from review mode)
 - test-case filter (just the highlights of changed tests)
 - autocomplete for cli (argcomplete library?)
 - filter-by-regex for review and approve line-by-line over one or all files
