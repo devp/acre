@@ -1,9 +1,10 @@
 import os
 import re
 import subprocess
+from hashlib import sha256
 
 from cli.pretty import print_whimsically
-from cli.util import mark_reviewed_prompt, yn
+from cli.util import mark_reviewed_prompt, open_url, yn
 from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
 from lib.sources.git import diff, diff_filtered
 from lib.sources.github import approve_pr, data_from_gh
@@ -72,6 +73,52 @@ class CommandsV0:
         else:
             print(text)
 
+    def resolve_review_path(self, item: str) -> str | None:
+        if item in self.state.files:
+            return item
+
+        if item.isdigit():
+            idx = int(item) - 1
+            paths = list(self.state.files.keys())
+            if 0 <= idx < len(paths):
+                return paths[idx]
+            return None
+
+        matches = [path for path in self.state.files if os.path.basename(path) == item]
+        if len(matches) == 1:
+            return matches[0]
+        return None
+
+    def github_file_url(self, path: str) -> str | None:
+        pr_url = self.state.metadata.get("pr_url")
+        if not pr_url:
+            data = data_from_gh()
+            pr_url = data.url
+            if pr_url:
+                self.state.metadata["pr_url"] = pr_url
+                self.state_manager.save_state(self.state)
+        if not pr_url:
+            return None
+        return f"{pr_url}/files#diff-{sha256(path.encode('utf-8')).hexdigest()}"
+
+    def cmd_peek(self, item: str) -> bool:
+        path = self.resolve_review_path(item)
+        if not path:
+            print(f"Could not resolve file: {item}")
+            return False
+
+        url = self.github_file_url(path)
+        if not url:
+            print("No GitHub PR URL found in review metadata. Run 'init' on a branch with a GitHub PR.")
+            return False
+
+        if not open_url(url):
+            print(f"Failed to open URL for {path}")
+            return False
+
+        print(f"Opened {path} in GitHub PR diff view.")
+        return True
+
     def cmd_review(self, path, mode="default", ask_approve=True, test_diff_first: bool = False):
         """Reviews a single file"""
         if self.state.is_file_reviewed(path):
@@ -107,7 +154,11 @@ class CommandsV0:
         diff(path, diff_target=self.state.diff_target())
         if not ask_approve:
             return
-        if not mark_reviewed_prompt(path=path, prompt="Mark reviewed?"):
+        if not mark_reviewed_prompt(
+            path=path,
+            prompt="Mark reviewed?",
+            on_peek=lambda: self.cmd_peek(path),
+        ):
             return
         self.state_manager.mark_file_reviewed(self.state, path)
         self.state_manager.save_state(self.state)

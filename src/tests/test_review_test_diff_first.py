@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import lib.commands.review as review_cmd
 import lib.commands_v0 as commands_v0
+from cli.util import mark_reviewed_prompt as prompt_impl
 from lib.models import FileState, ReviewState
 
 
@@ -118,3 +119,50 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
     cmd.cmd_review("test_widget.py", ask_approve=True, test_diff_first=True)
 
     assert [c[0] for c in calls] == ["diff_filtered", "mark", "save"]
+
+
+def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
+    state = ReviewState(
+        review_id="rid",
+        init_commit_sha="init",
+        files={"test_widget.py": FileState(lines=3)},
+        metadata={"pr_url": "https://github.com/acme/repo/pull/123"},
+    )
+
+    calls: list[tuple[str, object]] = []
+
+    class FakeStateManager:
+        def load_state(self, _key):
+            return state
+
+        def mark_file_reviewed(self, _state, path):
+            calls.append(("mark", path))
+            state.files[path].approved_sha = "newsha"
+
+        def save_state(self, _state):
+            calls.append(("save", ""))
+
+    def fake_diff(path, diff_target="main"):
+        calls.append(("diff", (path, diff_target)))
+
+    inputs = iter(["p", "y"])
+    monkeypatch.setattr(commands_v0, "diff", fake_diff)
+    monkeypatch.setattr(commands_v0, "open_url", lambda url: calls.append(("open", url)) or True)
+    monkeypatch.setattr(
+        commands_v0,
+        "mark_reviewed_prompt",
+        lambda **kwargs: prompt_impl(
+            **kwargs,
+            input_fn=lambda _prompt: next(inputs),
+        ),
+    )
+
+    cmd = commands_v0.CommandsV0(
+        key="rid",
+        state_manager=FakeStateManager(),
+        config={},
+    )
+
+    cmd.cmd_review("test_widget.py", ask_approve=True, test_diff_first=False)
+
+    assert [c[0] for c in calls] == ["diff", "open", "mark", "save"]

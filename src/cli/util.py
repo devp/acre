@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+import webbrowser
 from collections.abc import Callable, Mapping
 
 
@@ -47,11 +48,29 @@ def open_in_editor(
     return True
 
 
+def open_url(
+    url: str,
+    *,
+    run: Callable[..., object] = subprocess.run,
+    browser_open: Callable[[str], bool] = webbrowser.open,
+    print_fn: Callable[..., object] = print,
+) -> bool:
+    try:
+        run(["open", url])
+        return True
+    except FileNotFoundError:
+        if browser_open(url):
+            return True
+        print_fn("Could not open URL in browser.")
+        return False
+
+
 def mark_reviewed_prompt(
     *,
     path: str,
     prompt: str = "Mark reviewed?",
     default: bool = False,
+    on_peek: Callable[[], bool] | None = None,
     input_fn: Callable[[str], str] = input,
     env: Mapping[str, str] | None = None,
     run: Callable[..., object] = subprocess.run,
@@ -64,10 +83,11 @@ def mark_reviewed_prompt(
     - y / yes
     - n / no
     - e / edit (opens $EDITOR for the file, then re-prompts)
+    - p / peek (opens the GitHub diff view for the file, then re-prompts)
     - empty input returns `default`
     """
     while True:
-        ans = input_fn(f"{prompt} [{'Y/n/e' if default else 'y/N/e'}] ").strip().lower()
+        ans = input_fn(f"{prompt} [{'Y/n/e/p' if default else 'y/N/e/p'}] ").strip().lower()
         if not ans:
             return default
         if ans in {"y", "yes"}:
@@ -81,4 +101,10 @@ def mark_reviewed_prompt(
                 print_fn("EDITOR is not set; set $EDITOR to use edit.")
                 continue
             open_in_editor(path, env=env, run=run, print_fn=print_fn)
+            continue
+        if ans in {"p", "peek"}:
+            if on_peek is None:
+                print_fn("Peek is not available for this file.")
+                continue
+            on_peek()
             continue

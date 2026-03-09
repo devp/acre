@@ -7,7 +7,7 @@ GHData = GitData
 
 def data_from_gh(retry_remote_branch=False):
     try:
-        cmds = ["gh", "pr", "view", "--json", "title,body,files,number,baseRefOid,headRefOid"]
+        cmds = ["gh", "pr", "view", "--json", "title,body,url,files,number,baseRefOid,headRefOid"]
         if retry_remote_branch:
             name_rev = get_name_rev()
             if name_rev.startswith("remotes/origin/"):
@@ -35,6 +35,7 @@ def data_from_gh(retry_remote_branch=False):
             title=data.get("title"),
             body=data.get("body"),
             number=number,
+            url=data.get("url"),
             files=files,
             lines_changed=lines_changed,
             base_commit=data.get("baseRefOid"),

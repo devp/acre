@@ -56,3 +56,17 @@ def test_mark_reviewed_prompt_edit_without_editor_prints_and_reprompts():
     )
     assert any("EDITOR is not set" in msg for msg in prints)
 
+
+def test_mark_reviewed_prompt_peek_runs_callback_then_accepts_yes():
+    inputs = iter(["p", "y"])
+    calls: list[str] = []
+
+    def input_fn(_prompt: str) -> str:
+        return next(inputs)
+
+    def on_peek() -> bool:
+        calls.append("peek")
+        return True
+
+    assert mark_reviewed_prompt(path="peek.py", input_fn=input_fn, on_peek=on_peek) is True
+    assert calls == ["peek"]

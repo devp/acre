@@ -108,6 +108,8 @@ class StateManager:
                 state.metadata["head_commit"] = gh_data.head_commit
             if gh_data.number:
                 state.metadata["pr_number"] = str(gh_data.number)
+            if gh_data.url:
+                state.metadata["pr_url"] = gh_data.url
         
         self.save_state(state)
         return state

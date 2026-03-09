@@ -1,7 +1,8 @@
 import subprocess
+from hashlib import sha256
 
 from lib.commands_v0 import CommandsV0
-from lib.models import ReviewState
+from lib.models import FileState, ReviewState
 from lib.state import StateManager
 
 
@@ -83,3 +84,26 @@ def test_cmd_approve_reports_gh_failure(monkeypatch, tmp_path, capsys):
 
     assert cmd.cmd_approve() is False
     assert "Failed to approve PR #123" in capsys.readouterr().out
+
+
+def test_cmd_peek_opens_github_file_url(monkeypatch, tmp_path, capsys):
+    state_manager = StateManager(repo_root=str(tmp_path), current_sha="deadbeef")
+    state = ReviewState(
+        review_id="rid",
+        init_commit_sha="init",
+        files={"src/app.py": FileState()},
+        metadata={"pr_url": "https://github.com/acme/repo/pull/123"},
+    )
+    state_manager.save_state(state)
+
+    opened: list[str] = []
+    monkeypatch.setattr("lib.commands_v0.open_url", lambda url: opened.append(url) or True)
+
+    cmd = CommandsV0(state_manager=state_manager, key="rid", config={})
+
+    assert cmd.cmd_peek("1") is True
+    assert opened == [
+        "https://github.com/acme/repo/pull/123/files#diff-"
+        + sha256("src/app.py".encode("utf-8")).hexdigest()
+    ]
+    assert "Opened src/app.py in GitHub PR diff view." in capsys.readouterr().out

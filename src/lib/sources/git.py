@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
 import subprocess
 import sys
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 @dataclass
@@ -8,6 +8,7 @@ class GitData:
     title: Optional[str] = None
     body: Optional[str] = None
     number: Optional[int] = None
+    url: Optional[str] = None
     files: List[str] = field(default_factory=list)
     lines_changed: dict[str, int] = field(default_factory=dict)
     base_commit: Optional[str] = None

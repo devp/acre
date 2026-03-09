@@ -53,6 +53,7 @@ def test_state_manager_initialize_review_seeds_files_and_metadata(tmp_path):
         title="t",
         body="b",
         number=7,
+        url="https://github.com/acme/repo/pull/7",
         files=["a.py", "b.py"],
         lines_changed={"a.py": 3, "b.py": 0},
         base_commit="base",
@@ -65,11 +66,21 @@ def test_state_manager_initialize_review_seeds_files_and_metadata(tmp_path):
     assert set(state.files.keys()) == {"a.py", "b.py"}
     assert state.files["a.py"].lines == 3
     assert state.files["b.py"].lines == 0
-    assert state.metadata == {"base_commit": "base", "head_commit": "head", "pr_number": "7"}
+    assert state.metadata == {
+        "base_commit": "base",
+        "head_commit": "head",
+        "pr_number": "7",
+        "pr_url": "https://github.com/acme/repo/pull/7",
+    }
 
     loaded = state_manager.load_state("rid")
     assert loaded is not None
-    assert loaded.metadata == {"base_commit": "base", "head_commit": "head", "pr_number": "7"}
+    assert loaded.metadata == {
+        "base_commit": "base",
+        "head_commit": "head",
+        "pr_number": "7",
+        "pr_url": "https://github.com/acme/repo/pull/7",
+    }
 
 
 def test_state_manager_mark_file_reviewed_and_reset(tmp_path):
@@ -98,4 +109,3 @@ def test_state_manager_mark_file_reviewed_and_reset(tmp_path):
     assert state.files["a.py"].preapproved_sha is None
     assert state.files["a.py"].preapproved_blocks == []
     assert state.files["a.py"].notes is None
-

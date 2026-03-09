@@ -64,6 +64,15 @@ def impl_approve(context: Context, **_):
     )
     cmdv0.cmd_approve()
 
+
+def impl_peek(context: Context, args, **_):
+    cmdv0 = CommandsV0(
+        key=context.key,
+        state_manager=context.state_manager,
+        config=context.config,
+    )
+    cmdv0.cmd_peek(args.item)
+
 def register(sub: argparse._SubParsersAction):
     status = sub.add_parser("status", help="Status of review")
     status.set_defaults(impl=impl_status)
@@ -81,3 +90,6 @@ def register(sub: argparse._SubParsersAction):
     metadata.set_defaults(impl=impl_metadata)
     approve = sub.add_parser("approve", help="Approve the current PR after confirmation")
     approve.set_defaults(impl=impl_approve)
+    peek = sub.add_parser("peek", help="Open a changed file in the GitHub PR diff view by path or index")
+    peek.add_argument("item", help="File path, basename (if unique), or numeric index from `ls`")
+    peek.set_defaults(impl=impl_peek)
