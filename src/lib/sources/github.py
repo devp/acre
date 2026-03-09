@@ -46,3 +46,11 @@ def data_from_gh(retry_remote_branch=False):
         else:
             print("No GH data found for branch")
             return GHData()
+
+
+def approve_pr(pr_number: str | int) -> None:
+    subprocess.run(
+        ["gh", "pr", "review", "--approve", str(pr_number)],
+        check=True,
+        text=True,
+    )

@@ -55,6 +55,15 @@ def impl_metadata(context: Context, **_):
         exit(1)
     print(json.dumps(state.metadata, indent=2))
 
+
+def impl_approve(context: Context, **_):
+    cmdv0 = CommandsV0(
+        key=context.key,
+        state_manager=context.state_manager,
+        config=context.config,
+    )
+    cmdv0.cmd_approve()
+
 def register(sub: argparse._SubParsersAction):
     status = sub.add_parser("status", help="Status of review")
     status.set_defaults(impl=impl_status)
@@ -70,3 +79,5 @@ def register(sub: argparse._SubParsersAction):
     reset.set_defaults(impl=impl_reset)
     metadata = sub.add_parser("metadata", help="Get metadata from review state, output as JSON")
     metadata.set_defaults(impl=impl_metadata)
+    approve = sub.add_parser("approve", help="Approve the current PR after confirmation")
+    approve.set_defaults(impl=impl_approve)

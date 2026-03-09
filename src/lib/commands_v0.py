@@ -1,11 +1,12 @@
 import os
 import re
+import subprocess
 
 from cli.pretty import print_whimsically
 from cli.util import mark_reviewed_prompt, yn
 from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
 from lib.sources.git import diff, diff_filtered
-from lib.sources.github import data_from_gh
+from lib.sources.github import approve_pr, data_from_gh
 from lib.sources.jira import find_jira_tag
 from lib.state import StateManager
 
@@ -116,3 +117,22 @@ class CommandsV0:
     def cmd_reset(self):
         self.state_manager.do_reset(self.state)
         self.state_manager.save_state(self.state)
+
+    def cmd_approve(self):
+        pr_number = self.state.metadata.get("pr_number")
+        if not pr_number:
+            print("No PR number found in review metadata. Run 'init' on a branch with a GitHub PR.")
+            return False
+        if not yn(f"Approve PR #{pr_number}?", default=False):
+            print("Approval cancelled.")
+            return False
+        try:
+            approve_pr(pr_number)
+        except FileNotFoundError:
+            print("GitHub CLI 'gh' is not installed or not on PATH.")
+            return False
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to approve PR #{pr_number} (exit code {e.returncode}).")
+            return False
+        print(f"Approved PR #{pr_number}.")
+        return True
