@@ -83,7 +83,7 @@ def mark_reviewed_prompt(
     - y / yes
     - n / no
     - e / edit (opens $EDITOR for the file, then re-prompts)
-    - p / peek (opens the GitHub diff view for the file, then re-prompts)
+    - k / peek (opens the GitHub diff view for the file, then re-prompts)
     - empty input returns `default`
     """
     while True:
@@ -102,7 +102,7 @@ def mark_reviewed_prompt(
                 continue
             open_in_editor(path, env=env, run=run, print_fn=print_fn)
             continue
-        if ans in {"p", "peek"}:
+        if ans in {"k", "peek"}:
             if on_peek is None:
                 print_fn("Peek is not available for this file.")
                 continue
