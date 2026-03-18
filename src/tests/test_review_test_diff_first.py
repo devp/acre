@@ -74,6 +74,39 @@ def test_review_impl_passes_test_diff_first_to_cmd_review(monkeypatch):
     assert calls == [("review", ("a.py", True, True))]
 
 
+def test_review_impl_uses_config_default_for_test_diff_first(monkeypatch):
+    state = ReviewState(
+        review_id="rid",
+        init_commit_sha="init",
+        files={"a.py": FileState()},
+    )
+    calls: list[tuple[str, object]] = []
+
+    class FakeStateManager:
+        def load_state(self, _key):
+            return state
+
+    class FakeCommandsV0:
+        def __init__(self, **_kwargs):
+            pass
+
+        def cmd_review(self, *, path, ask_approve=True, test_diff_first=False, **_kwargs):
+            calls.append(("review", (path, ask_approve, test_diff_first)))
+
+    monkeypatch.setattr(review_cmd, "CommandsV0", FakeCommandsV0)
+
+    context = SimpleNamespace(
+        key="rid",
+        state_manager=FakeStateManager(),
+        config={"review": {"test_diff_first_default": True}},
+    )
+    args = SimpleNamespace(items=["a.py"], todo=False, skim=False, loc_lte=None, test_diff_first=None)
+
+    review_cmd.impl(args=args, context=context)
+
+    assert calls == [("review", ("a.py", True, True))]
+
+
 def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(monkeypatch):
     state = ReviewState(
         review_id="rid",

@@ -3,6 +3,7 @@ import argparse
 from cli.context import Context
 from cli.util import yn
 from lib.commands_v0 import CommandsV0
+from lib.config.config import get_review_test_diff_first_default
 
 
 def _select_paths_to_review(
@@ -61,7 +62,12 @@ def impl(args: argparse.Namespace, context: Context):
     )
 
     skim_mode = bool(hasattr(args, 'skim') and args.skim)
-    test_diff_first = bool(hasattr(args, "test_diff_first") and args.test_diff_first)
+    arg_test_diff_first = getattr(args, "test_diff_first", None)
+    test_diff_first = (
+        arg_test_diff_first
+        if arg_test_diff_first is not None
+        else get_review_test_diff_first_default(context.config)
+    )
     for path in paths_to_review:
         cmdv0.cmd_review(
             path=path,
@@ -87,6 +93,7 @@ def register(sub: argparse._SubParsersAction):
         "--test-diff-first",
         dest="test_diff_first",
         action="store_true",
+        default=None,
         help="For test files (per config review.test_file_patterns), show a filtered diff subset (review.test_diff_patterns) before the full diff",
     )
     review.set_defaults(impl=impl)

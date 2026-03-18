@@ -26,6 +26,9 @@ base = "your-corp"
 
 # Review behavior for test files.
 [review]
+# Opt in to make `review` behave as if `--test-diff-first` was passed.
+# The CLI flag still takes precedence when explicitly provided.
+test_diff_first_default = true
 # Test file detection: matched against the file basename.
 test_file_patterns = ["^test_", "_test(\\.[^.]+)?$"]
 # Test diff filtering (grep -E): matched against changed lines (+/- prefixed).

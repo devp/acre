@@ -33,6 +33,14 @@ def get_review_test_diff_patterns(config: Dict) -> Optional[list[str]]:
         return None
     return patterns
 
+
+def get_review_test_diff_first_default(config: Dict) -> bool:
+    review = config.get("review")
+    if not isinstance(review, dict):
+        return False
+    value = review.get("test_diff_first_default")
+    return value is True
+
 def resolve_cmd_from_config_aliases(cmd: str, config: Dict) -> List[str]:
     aliases = config.get("aliases")
     if aliases:
