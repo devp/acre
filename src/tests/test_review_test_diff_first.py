@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import lib.commands.review as review_cmd
 import lib.commands_v0 as commands_v0
+import lib.sources.git as git_source
 from cli.util import mark_reviewed_prompt as prompt_impl
 from lib.models import FileState, ReviewState
 
@@ -35,7 +36,10 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
         config={
             "review": {
                 "test_file_patterns": ["^test_"],
-                "test_diff_patterns": ["def[[:space:]]+test_"],
+                "test_diff_patterns": [
+                    "def[[:space:]]+test_",
+                    "assert[A-Za-z_]*\\b",
+                ],
             }
         },
     )
@@ -43,6 +47,11 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
     cmd.cmd_review("test_widget.py", ask_approve=False, test_diff_first=True)
 
     assert [c[0] for c in calls] == ["diff_filtered", "diff"]
+    assert calls[0][1] == (
+        "test_widget.py",
+        "main",
+        ("def[[:space:]]+test_", "assert[A-Za-z_]*\\b"),
+    )
 
 
 def test_review_impl_passes_test_diff_first_to_cmd_review(monkeypatch):
@@ -152,6 +161,42 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
     cmd.cmd_review("test_widget.py", ask_approve=True, test_diff_first=True)
 
     assert [c[0] for c in calls] == ["diff_filtered", "mark", "save"]
+
+
+def test_diff_filtered_matches_assert_lines(monkeypatch, capsys):
+    diff_text = """diff --git a/test_widget.py b/test_widget.py
+--- a/test_widget.py
++++ b/test_widget.py
+@@ -1,2 +1,3 @@
++def test_widget():
++    assert result
++    self.assertEqual(foo, bar)
+"""
+
+    def fake_run(args, **kwargs):
+        if args[:3] == ["git", "diff", "main"]:
+            return SimpleNamespace(stdout=diff_text, returncode=0)
+        if args[:3] == ["grep", "-n", "-E"]:
+            text = kwargs["input"]
+            matches = []
+            for idx, line in enumerate(text.splitlines(), start=1):
+                if "assert" in line:
+                    matches.append(f"{idx}:{line}")
+            return SimpleNamespace(stdout="\n".join(matches) + ("\n" if matches else ""), returncode=0)
+        raise AssertionError(f"Unexpected subprocess call: {args}")
+
+    monkeypatch.setattr(git_source.subprocess, "run", fake_run)
+
+    printed = git_source.diff_filtered(
+        "test_widget.py",
+        diff_target="main",
+        line_patterns=["assert[A-Za-z_]*\\b"],
+    )
+
+    out = capsys.readouterr().out
+    assert printed == 2
+    assert "+    assert result" in out
+    assert "+    self.assertEqual(foo, bar)" in out
 
 
 def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):

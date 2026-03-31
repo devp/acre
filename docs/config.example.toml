@@ -32,4 +32,7 @@ test_diff_first_default = true
 # Test file detection: matched against the file basename.
 test_file_patterns = ["^test_", "_test(\\.[^.]+)?$"]
 # Test diff filtering (grep -E): matched against changed lines (+/- prefixed).
-test_diff_patterns = ["^[[:space:]]*(async[[:space:]]+def|def)[[:space:]]+test_"]
+test_diff_patterns = [
+  "^[[:space:]]*(async[[:space:]]+def|def)[[:space:]]+test_",
+  "assert[A-Za-z_]*\\b",
+]
