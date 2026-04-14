@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 from typing import Optional
 
 from lib.models import FileState, PreApprovalBlock, ReviewState
@@ -7,12 +8,27 @@ from lib.sources.github import GHData
 
 class StateManager:
     """Manages review state persistence in .git/acre directory"""
-    
+
     def __init__(self, repo_root: str, current_sha: str):
         self.repo_root = repo_root
         self.current_sha = current_sha
-        self.acre_dir = os.path.join(self.repo_root, ".git", "acre")
+        self.acre_dir = os.path.join(self._get_git_dir(repo_root), "acre")
         os.makedirs(self.acre_dir, exist_ok=True)
+
+    @staticmethod
+    def _get_git_dir(repo_root: str) -> str:
+        """Get the actual git directory, handling worktrees where .git is a file."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+        )
+        git_dir = result.stdout.strip()
+        if not os.path.isabs(git_dir):
+            git_dir = os.path.join(repo_root, git_dir)
+        return git_dir
     
 
     def state_file_path(self, review_id: str) -> str:
