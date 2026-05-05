@@ -9,14 +9,14 @@ from lib.config.config import get_review_test_diff_patterns, get_review_test_fil
 from lib.sources.git import diff, diff_filtered
 from lib.sources.github import approve_pr, data_from_gh
 from lib.sources.jira import find_jira_tag
-from lib.state import StateManager
+from lib.state import StateManagerProtocol
 
 
 
 class CommandsV0:
     """Simple earlier versions of some commands."""
 
-    def __init__(self, state_manager: StateManager, key: str, config={}):
+    def __init__(self, state_manager: StateManagerProtocol, key: str, config={}):
         self.key = key
         self.config = config
         self.state_manager = state_manager

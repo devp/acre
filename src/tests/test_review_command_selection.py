@@ -1,7 +1,10 @@
-from types import SimpleNamespace
+import argparse
+from typing import cast
 
 import lib.commands.review as review_cmd
+from cli.context import Context
 from lib.models import FileState, ReviewState
+from lib.state import StateManager
 
 
 def test_select_paths_to_review_resolves_numeric_indexes_to_paths():
@@ -102,6 +105,9 @@ def test_review_impl_skim_mode_approves_all_when_confirmed(monkeypatch):
         def save_state(self, _state):
             calls.append(("save", ""))
 
+        def do_reset(self, _state):
+            pass
+
     class FakeCommandsV0:
         def __init__(self, **_kwargs):
             pass
@@ -112,8 +118,8 @@ def test_review_impl_skim_mode_approves_all_when_confirmed(monkeypatch):
     monkeypatch.setattr(review_cmd, "CommandsV0", FakeCommandsV0)
     monkeypatch.setattr(review_cmd, "yn", lambda _prompt: True)
 
-    context = SimpleNamespace(key="rid", state_manager=FakeStateManager(), config={})
-    args = SimpleNamespace(items=[], todo=False, skim=True, loc_lte=None)
+    context = Context(key="rid", state_manager=cast(StateManager, FakeStateManager()), config={})
+    args = argparse.Namespace(items=[], todo=False, skim=True, loc_lte=None)
 
     review_cmd.impl(args=args, context=context)
 

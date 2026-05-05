@@ -1,10 +1,18 @@
 import json
 import os
 import subprocess
-from typing import Optional
+from typing import Optional, Protocol
 
 from lib.models import FileState, PreApprovalBlock, ReviewState
 from lib.sources.github import GHData
+
+
+class StateManagerProtocol(Protocol):
+    def load_state(self, __key: str) -> Optional[ReviewState]: ...
+    def save_state(self, __state: ReviewState) -> None: ...
+    def mark_file_reviewed(self, __state: ReviewState, __path: str) -> None: ...
+    def do_reset(self, __state: ReviewState) -> None: ...
+
 
 class StateManager:
     """Manages review state persistence in .git/acre directory"""

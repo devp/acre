@@ -1,10 +1,14 @@
+import argparse
 from types import SimpleNamespace
+from typing import cast
 
 import lib.commands.review as review_cmd
 import lib.commands_v0 as commands_v0
 import lib.sources.git as git_source
+from cli.context import Context
 from cli.util import mark_reviewed_prompt as prompt_impl
 from lib.models import FileState, ReviewState
+from lib.state import StateManager
 
 
 def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeypatch):
@@ -17,6 +21,10 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
     class FakeStateManager:
         def load_state(self, _key):
             return state
+
+        def save_state(self, _state): pass
+        def mark_file_reviewed(self, _state, _path): pass
+        def do_reset(self, _state): pass
 
     calls: list[tuple[str, object]] = []
 
@@ -66,6 +74,10 @@ def test_review_impl_passes_test_diff_first_to_cmd_review(monkeypatch):
         def load_state(self, _key):
             return state
 
+        def save_state(self, _state): pass
+        def mark_file_reviewed(self, _state, _path): pass
+        def do_reset(self, _state): pass
+
     class FakeCommandsV0:
         def __init__(self, **_kwargs):
             pass
@@ -75,8 +87,8 @@ def test_review_impl_passes_test_diff_first_to_cmd_review(monkeypatch):
 
     monkeypatch.setattr(review_cmd, "CommandsV0", FakeCommandsV0)
 
-    context = SimpleNamespace(key="rid", state_manager=FakeStateManager(), config={})
-    args = SimpleNamespace(items=["a.py"], todo=False, skim=False, loc_lte=None, test_diff_first=True)
+    context = Context(key="rid", state_manager=cast(StateManager, FakeStateManager()), config={})
+    args = argparse.Namespace(items=["a.py"], todo=False, skim=False, loc_lte=None, test_diff_first=True)
 
     review_cmd.impl(args=args, context=context)
 
@@ -95,6 +107,10 @@ def test_review_impl_uses_config_default_for_test_diff_first(monkeypatch):
         def load_state(self, _key):
             return state
 
+        def save_state(self, _state): pass
+        def mark_file_reviewed(self, _state, _path): pass
+        def do_reset(self, _state): pass
+
     class FakeCommandsV0:
         def __init__(self, **_kwargs):
             pass
@@ -104,12 +120,12 @@ def test_review_impl_uses_config_default_for_test_diff_first(monkeypatch):
 
     monkeypatch.setattr(review_cmd, "CommandsV0", FakeCommandsV0)
 
-    context = SimpleNamespace(
+    context = Context(
         key="rid",
-        state_manager=FakeStateManager(),
+        state_manager=cast(StateManager, FakeStateManager()),
         config={"review": {"test_diff_first_default": True}},
     )
-    args = SimpleNamespace(items=["a.py"], todo=False, skim=False, loc_lte=None, test_diff_first=None)
+    args = argparse.Namespace(items=["a.py"], todo=False, skim=False, loc_lte=None, test_diff_first=None)
 
     review_cmd.impl(args=args, context=context)
 
@@ -135,6 +151,8 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
 
         def save_state(self, _state):
             calls.append(("save", ""))
+
+        def do_reset(self, _state): pass
 
     def fake_diff_filtered(path, *, diff_target, line_patterns):
         calls.append(("diff_filtered", (path, diff_target, tuple(line_patterns))))
@@ -219,6 +237,8 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
 
         def save_state(self, _state):
             calls.append(("save", ""))
+
+        def do_reset(self, _state): pass
 
     def fake_diff(path, diff_target="main"):
         calls.append(("diff", (path, diff_target)))
