@@ -189,10 +189,11 @@ class CommandsV0:
             for idx, line in enumerate(lines, start=1):
                 if idx in excluded:
                     continue
-                prefix = f"{idx:3d}: "
                 if show_hunk_numbers and _strip_ansi(line).startswith("@@"):
                     hunk_idx += 1
-                    prefix = f"{prefix}H{hunk_idx:02d} "
+                    prefix = f"\033[2m{idx:3d}: H{hunk_idx:02d} \033[0m"
+                else:
+                    prefix = f"\033[2m{idx:3d}: \033[0m"
                 rendered.append(f"{prefix}{line}")
             lines = rendered
         else:
