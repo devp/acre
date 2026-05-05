@@ -5,6 +5,7 @@ import shlex
 
 from cli.context import Context
 from cli.util import yn
+from lib.commands.preapprove import register as register_preapprove
 from lib.commands.review import register as register_review
 from lib.commands.simple_commands import impl_status, register as register_simple
 from lib.config.config import (
@@ -21,6 +22,7 @@ def _build_interactive_parser():
     # Including existing commands
     register_simple(sub)
     register_review(sub)
+    register_preapprove(sub)
 
     # Interactive-only command (help)
     def impl_help(**_):

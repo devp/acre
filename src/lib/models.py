@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 class PreApprovalBlock:
     start_line: int
     end_line: int
-    notes: Optional[str] = None
+    notes: str = ""
 
 
 @dataclass

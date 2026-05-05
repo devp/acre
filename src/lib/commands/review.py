@@ -73,6 +73,10 @@ def impl(args: argparse.Namespace, context: Context):
             path=path,
             ask_approve=(False if skim_mode else True),
             test_diff_first=test_diff_first,
+            focus_regex=getattr(args, "focus_regex", None),
+            regex_include_context=bool(getattr(args, "regex_include_context", False)),
+            show_diff_line_numbers=bool(getattr(args, "diff_line_numbers", False)),
+            show_hunk_numbers=bool(getattr(args, "hunk_numbers", False)),
         )
     if skim_mode:
         if yn("Approve all files?"):
@@ -95,5 +99,28 @@ def register(sub: argparse._SubParsersAction):
         action="store_true",
         default=None,
         help="For test files (per config review.test_file_patterns), show a filtered diff subset (review.test_diff_patterns) before the full diff",
+    )
+    review.add_argument(
+        "--focus-regex",
+        dest="focus_regex",
+        help="Only show hunks where a changed line matches this regex",
+    )
+    review.add_argument(
+        "--regex-include-context",
+        dest="regex_include_context",
+        action="store_true",
+        help="Also match context lines when applying --focus-regex",
+    )
+    review.add_argument(
+        "--diff-line-numbers",
+        dest="diff_line_numbers",
+        action="store_true",
+        help="Prefix each rendered diff line with its 1-based line number (stable across preapprovals)",
+    )
+    review.add_argument(
+        "--hunk-numbers",
+        dest="hunk_numbers",
+        action="store_true",
+        help="Annotate each hunk header with a 1-based hunk number (e.g. H01) for use with preapprove --hunk",
     )
     review.set_defaults(impl=impl)

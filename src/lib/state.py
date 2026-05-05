@@ -26,17 +26,20 @@ class StateManager:
     @staticmethod
     def _get_git_dir(repo_root: str) -> str:
         """Get the actual git directory, handling worktrees where .git is a file."""
-        result = subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
-            check=True,
-            capture_output=True,
-            text=True,
-            cwd=repo_root,
-        )
-        git_dir = result.stdout.strip()
-        if not os.path.isabs(git_dir):
-            git_dir = os.path.join(repo_root, git_dir)
-        return git_dir
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--git-dir"],
+                check=True,
+                capture_output=True,
+                text=True,
+                cwd=repo_root,
+            )
+            git_dir = result.stdout.strip()
+            if not os.path.isabs(git_dir):
+                git_dir = os.path.join(repo_root, git_dir)
+            return git_dir
+        except subprocess.CalledProcessError:
+            return os.path.join(repo_root, ".git")
     
 
     def state_file_path(self, review_id: str) -> str:
@@ -88,7 +91,7 @@ class StateManager:
                 PreApprovalBlock(
                     start_line=block["start_line"],
                     end_line=block["end_line"],
-                    notes=block.get("notes", "")
+                    notes=block.get("notes") or "",
                 )
                 for block in file_data.get("preapproved_blocks", [])
             ]
@@ -147,6 +150,28 @@ class StateManager:
         if f is None:
             raise Exception(f"Not found for approval: {f}")
         f.approved_sha = self.current_sha
+
+    def add_preapproved_block(
+        self,
+        state: ReviewState,
+        *,
+        path: str,
+        start_line: int,
+        end_line: int,
+        notes: str = "",
+    ) -> None:
+        f = state.files.get(path)
+        if f is None:
+            raise Exception(f"Not found for preapproval: {path}")
+        f.preapproved_blocks.append(
+            PreApprovalBlock(start_line=start_line, end_line=end_line, notes=notes)
+        )
+
+    def clear_preapproved_blocks(self, state: ReviewState, *, path: str) -> None:
+        f = state.files.get(path)
+        if f is None:
+            raise Exception(f"Not found for preapproval: {path}")
+        f.preapproved_blocks = []
 
     def delete_state(self, review_id: str) -> None:
         """Permanently delete the review state file"""

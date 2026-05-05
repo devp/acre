@@ -6,7 +6,9 @@ from hashlib import sha256
 from cli.pretty import print_whimsically
 from cli.util import mark_reviewed_prompt, open_url, yn
 from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
-from lib.sources.git import diff, diff_filtered
+from lib.diff_filter import excluded_diff_line_numbers, filter_diff_lines
+from lib.hunk_filter import _strip_ansi, filter_diff_hunks_by_regex
+from lib.sources.git import diff_filtered, diff_lines
 from lib.sources.github import approve_pr, data_from_gh
 from lib.sources.jira import find_jira_tag
 from lib.state import StateManagerProtocol
@@ -119,7 +121,17 @@ class CommandsV0:
         print(f"Opened {path} in GitHub PR diff view.")
         return True
 
-    def cmd_review(self, path, mode="default", ask_approve=True, test_diff_first: bool = False):
+    def cmd_review(
+        self,
+        path,
+        mode="default",
+        ask_approve=True,
+        test_diff_first: bool = False,
+        focus_regex: str | None = None,
+        regex_include_context: bool = False,
+        show_diff_line_numbers: bool = False,
+        show_hunk_numbers: bool = False,
+    ):
         """Reviews a single file"""
         if self.state.is_file_reviewed(path):
             print(f"{path} already reviewed")
@@ -151,7 +163,52 @@ class CommandsV0:
                             lines = self.state.lines_of_file(path)
                             print(f"> Marked {lines} lines as reviewed (test preview)")
                             return True
-        diff(path, diff_target=self.state.diff_target())
+
+        file_state = self.state.files.get(path)
+        lines = diff_lines(path, diff_target=self.state.diff_target())
+
+        if focus_regex:
+            lines = filter_diff_hunks_by_regex(
+                lines, pattern=focus_regex, include_context=regex_include_context
+            )
+
+        preapproved_blocks = file_state.preapproved_blocks if file_state else []
+        excluded = (
+            excluded_diff_line_numbers(preapproved_blocks=preapproved_blocks)
+            if preapproved_blocks
+            else set()
+        )
+
+        if show_diff_line_numbers:
+            # Numbers always refer to pre-preapproval positions so they stay stable
+            # across multiple preapprove calls.
+            rendered: list[str] = []
+            hunk_idx = 0
+            for idx, line in enumerate(lines, start=1):
+                if idx in excluded:
+                    continue
+                prefix = f"{idx:3d}: "
+                if show_hunk_numbers and _strip_ansi(line).startswith("@@"):
+                    hunk_idx += 1
+                    prefix = f"{prefix}H{hunk_idx:02d} "
+                rendered.append(f"{prefix}{line}")
+            lines = rendered
+        else:
+            if excluded:
+                lines = filter_diff_lines(lines, preapproved_blocks=preapproved_blocks)
+            if show_hunk_numbers:
+                annotated: list[str] = []
+                hunk_idx = 0
+                for line in lines:
+                    if _strip_ansi(line).startswith("@@"):
+                        hunk_idx += 1
+                        annotated.append(f"H{hunk_idx:02d} {line}")
+                    else:
+                        annotated.append(line)
+                lines = annotated
+
+        print("".join(lines), end="")
+
         if not ask_approve:
             return
         if not mark_reviewed_prompt(
@@ -162,8 +219,8 @@ class CommandsV0:
             return
         self.state_manager.mark_file_reviewed(self.state, path)
         self.state_manager.save_state(self.state)
-        lines = self.state.lines_of_file(path)
-        print(f"> Marked {lines} lines as reviewed ({mode} mode)")
+        reviewed_lines = self.state.lines_of_file(path)
+        print(f"> Marked {reviewed_lines} lines as reviewed ({mode} mode)")
 
     def cmd_reset(self):
         self.state_manager.do_reset(self.state)
