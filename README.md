@@ -30,6 +30,7 @@ positional arguments:
     reset               Reset the progress of the code review
     metadata            Get metadata from review state, output as JSON
     approve             Approve the current PR after confirmation
+    overview            Print PR summary, Jira link, file list, and status
     peek                Open a file in the GitHub PR diff view (e.g. for comments)
     review              Review one or more files
     preapprove          Mark diff line ranges as pre-approved, hiding them
