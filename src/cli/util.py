@@ -102,7 +102,7 @@ def mark_reviewed_prompt(
                 continue
             open_in_editor(path, env=env, run=run, print_fn=print_fn)
             continue
-        if ans in {"k", "peek"}:
+        if ans in {"k", "p", "peek"}:
             if on_peek is None:
                 print_fn("Peek is not available for this file.")
                 continue

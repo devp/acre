@@ -6,8 +6,8 @@ from lib.models import FileState, ReviewState
 from lib.state import StateManager
 
 
-def test_cmd_approve_confirms_and_runs_gh(monkeypatch, tmp_path, capsys):
-    state_manager = StateManager(repo_root=str(tmp_path), current_sha="deadbeef")
+def test_cmd_approve_confirms_and_runs_gh(monkeypatch, git_repo, capsys):
+    state_manager = StateManager(repo_root=str(git_repo), current_sha="deadbeef")
     state = ReviewState(
         review_id="rid",
         init_commit_sha="init",
@@ -27,8 +27,8 @@ def test_cmd_approve_confirms_and_runs_gh(monkeypatch, tmp_path, capsys):
     assert "Approved PR #123." in capsys.readouterr().out
 
 
-def test_cmd_approve_cancelled_does_not_run_gh(monkeypatch, tmp_path, capsys):
-    state_manager = StateManager(repo_root=str(tmp_path), current_sha="deadbeef")
+def test_cmd_approve_cancelled_does_not_run_gh(monkeypatch, git_repo, capsys):
+    state_manager = StateManager(repo_root=str(git_repo), current_sha="deadbeef")
     state = ReviewState(
         review_id="rid",
         init_commit_sha="init",
@@ -49,8 +49,8 @@ def test_cmd_approve_cancelled_does_not_run_gh(monkeypatch, tmp_path, capsys):
     assert "Approval cancelled." in capsys.readouterr().out
 
 
-def test_cmd_approve_requires_pr_number(tmp_path, capsys):
-    state_manager = StateManager(repo_root=str(tmp_path), current_sha="deadbeef")
+def test_cmd_approve_requires_pr_number(git_repo, capsys):
+    state_manager = StateManager(repo_root=str(git_repo), current_sha="deadbeef")
     state = ReviewState(
         review_id="rid",
         init_commit_sha="init",
@@ -64,8 +64,8 @@ def test_cmd_approve_requires_pr_number(tmp_path, capsys):
     assert "No PR number found in review metadata." in capsys.readouterr().out
 
 
-def test_cmd_approve_reports_gh_failure(monkeypatch, tmp_path, capsys):
-    state_manager = StateManager(repo_root=str(tmp_path), current_sha="deadbeef")
+def test_cmd_approve_reports_gh_failure(monkeypatch, git_repo, capsys):
+    state_manager = StateManager(repo_root=str(git_repo), current_sha="deadbeef")
     state = ReviewState(
         review_id="rid",
         init_commit_sha="init",
@@ -86,8 +86,8 @@ def test_cmd_approve_reports_gh_failure(monkeypatch, tmp_path, capsys):
     assert "Failed to approve PR #123" in capsys.readouterr().out
 
 
-def test_cmd_peek_opens_github_file_url(monkeypatch, tmp_path, capsys):
-    state_manager = StateManager(repo_root=str(tmp_path), current_sha="deadbeef")
+def test_cmd_peek_opens_github_file_url(monkeypatch, git_repo, capsys):
+    state_manager = StateManager(repo_root=str(git_repo), current_sha="deadbeef")
     state = ReviewState(
         review_id="rid",
         init_commit_sha="init",

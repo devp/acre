@@ -3,8 +3,8 @@ from lib.sources.git import GitData
 from lib.state import StateManager
 
 
-def test_state_manager_save_load_roundtrip(tmp_path):
-    repo_root = str(tmp_path)
+def test_state_manager_save_load_roundtrip(git_repo):
+    repo_root = str(git_repo)
     state_manager = StateManager(repo_root=repo_root, current_sha="deadbeef")
 
     state = ReviewState(
@@ -45,8 +45,8 @@ def test_state_manager_save_load_roundtrip(tmp_path):
     assert loaded.files["b.py"].lines == 5
 
 
-def test_state_manager_initialize_review_seeds_files_and_metadata(tmp_path):
-    repo_root = str(tmp_path)
+def test_state_manager_initialize_review_seeds_files_and_metadata(git_repo):
+    repo_root = str(git_repo)
     state_manager = StateManager(repo_root=repo_root, current_sha="c0ffee")
 
     gh_data = GitData(
@@ -83,8 +83,8 @@ def test_state_manager_initialize_review_seeds_files_and_metadata(tmp_path):
     }
 
 
-def test_state_manager_mark_file_reviewed_and_reset(tmp_path):
-    repo_root = str(tmp_path)
+def test_state_manager_mark_file_reviewed_and_reset(git_repo):
+    repo_root = str(git_repo)
     state_manager = StateManager(repo_root=repo_root, current_sha="newsha")
 
     state = ReviewState(
