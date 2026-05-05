@@ -43,18 +43,22 @@ options:
 
 ### Preapproval workflow
 
-`preapprove` lets you hide diff ranges you've already processed (e.g. generated code, noise, boilerplate) so subsequent `review` runs show only what remains.
+`preapprove` lets you hide diff ranges you've already processed (e.g. generated code, noise, boilerplate) so subsequent `review` runs show only what remains. Files with active preapprovals show a `[N PA]` count in `ls` output.
 
 ```bash
-# See diff line numbers to identify a range to hide
-acre review 3 --diff-line-numbers
+# See diff line numbers (dim grey) and hunk labels to identify what to hide
+acre review 3 --diff-line-numbers --hunk-numbers
 
-# Hide lines 12–18 of file #3
-acre preapprove 3 12 18 --notes "generated types"
+# Hide a whole hunk by number (plain integer or H-prefixed)
+acre preapprove 3 2        # hides hunk 2 of file #3
+acre preapprove 3 H02      # same thing
 
-# Or pre-approve a whole hunk by number
-acre review 3 --hunk-numbers          # shows H01, H02, …
-acre preapprove 3 --hunk 2            # hides hunk 2 entirely
+# Hide a line range
+acre preapprove 3 12:18 --notes "generated types"
+
+# Open-ended ranges
+acre preapprove 3 :10      # lines 1–10
+acre preapprove 3 25:      # line 25 through end of diff
 
 # Focus a review on hunks matching a pattern
 acre review 3 --focus-regex "async def"
@@ -64,6 +68,16 @@ acre preapprove 3 --clear
 ```
 
 Pre-approved line numbers refer to the 1-based position in the rendered diff output (as shown by `--diff-line-numbers`), **not** source-file line numbers. Numbers stay stable across multiple `preapprove` calls on the same file.
+
+**Inline preapproval during review:** at the mark-reviewed prompt, type `p <hunk|range>` to preapprove without leaving the review flow:
+
+```
+Mark reviewed? [y/N/e/w/p <hunk|range>] p 2
+Preapproved hunk 2 (lines 7-14) of src/api.py
+Mark reviewed? [y/N/e/w/p <hunk|range>] p 40:55
+Preapproved lines 40-55 of src/api.py
+Mark reviewed? [y/N/e/w/p <hunk|range>] y
+```
 
 Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)
 
