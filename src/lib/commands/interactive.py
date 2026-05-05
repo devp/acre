@@ -15,7 +15,7 @@ from lib.config.config import (
 from lib.initialize import cmd_init
 
 
-def _build_interactive_parser():
+def _build_interactive_parser(config: dict):
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd")
 
@@ -27,6 +27,10 @@ def _build_interactive_parser():
     # Interactive-only command (help)
     def impl_help(**_):
         p.print_usage()
+        aliases = config.get("aliases")
+        if aliases:
+            pairs = ", ".join(f"{k} → {v}" for k, v in aliases.items())
+            print(f"Aliases: {pairs}")
     help = sub.add_parser("help", aliases=["h", "?"])
     help.set_defaults(impl=impl_help)
 
@@ -104,7 +108,7 @@ def impl_interactive(context: Context, args=None, **_):
     # Setup readline for interactive features
     history_file = _setup_readline()
     
-    parser = _build_interactive_parser()
+    parser = _build_interactive_parser(config=context.config)
     try:
         while True:
             try:
