@@ -58,7 +58,7 @@ def test_mark_reviewed_prompt_edit_without_editor_prints_and_reprompts():
 
 
 def test_mark_reviewed_prompt_peek_runs_callback_then_accepts_yes():
-    inputs = iter(["p", "y"])
+    inputs = iter(["w", "y"])
     calls: list[str] = []
 
     def input_fn(_prompt: str) -> str:

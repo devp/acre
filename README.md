@@ -19,10 +19,10 @@ is related to a Github PR (i.e. `gh pr checkout`).
 
 ```
 usage: codereview.py [-h]
-                     {init,status,ls,overview,reset,metadata,approve,peek,review,preapprove,interactive} ...
+                     {init,status,ls,overview,reset,metadata,approve,webpeek,review,preapprove,interactive} ...
 
 positional arguments:
-  {init,status,ls,overview,reset,metadata,approve,peek,review,preapprove,interactive}
+  {init,status,ls,overview,reset,metadata,approve,webpeek,review,preapprove,interactive}
     init                Initialize a new code review session
     status              Status of review
     ls                  List of files for this review, including their
@@ -31,7 +31,7 @@ positional arguments:
     metadata            Get metadata from review state, output as JSON
     approve             Approve the current PR after confirmation
     overview            Print PR summary, Jira link, file list, and status
-    peek                Open a file in the GitHub PR diff view (e.g. for comments)
+    webpeek             Open a file in the GitHub PR diff view (e.g. for comments)
     review              Review one or more files
     preapprove          Mark diff line ranges as pre-approved, hiding them
                         from future review diffs

@@ -241,7 +241,7 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
         calls.append(("diff_lines", (path, diff_target)))
         return []
 
-    inputs = iter(["p", "y"])
+    inputs = iter(["w", "y"])
     monkeypatch.setattr(commands_v0, "diff_lines", fake_diff_lines)
     monkeypatch.setattr(commands_v0, "open_url", lambda url: calls.append(("open", url)) or True)
     monkeypatch.setattr(

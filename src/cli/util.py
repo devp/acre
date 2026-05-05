@@ -83,11 +83,11 @@ def mark_reviewed_prompt(
     - y / yes
     - n / no
     - e / edit (opens $EDITOR for the file, then re-prompts)
-    - k / peek (opens the GitHub diff view for the file, then re-prompts)
+    - w / webpeek (opens the GitHub diff view for the file, then re-prompts)
     - empty input returns `default`
     """
     while True:
-        ans = input_fn(f"{prompt} [{'Y/n/e/p' if default else 'y/N/e/p'}] ").strip().lower()
+        ans = input_fn(f"{prompt} [{'Y/n/e/w' if default else 'y/N/e/w'}] ").strip().lower()
         if not ans:
             return default
         if ans in {"y", "yes"}:
@@ -102,9 +102,9 @@ def mark_reviewed_prompt(
                 continue
             open_in_editor(path, env=env, run=run, print_fn=print_fn)
             continue
-        if ans in {"k", "p", "peek"}:
+        if ans in {"w", "webpeek"}:
             if on_peek is None:
-                print_fn("Peek is not available for this file.")
+                print_fn("Webpeek is not available for this file.")
                 continue
             on_peek()
             continue
