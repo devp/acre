@@ -32,7 +32,7 @@ def test_preapprove_accepts_hunk_selector_with_prefix(tmp_path, monkeypatch):
 
     from cli.parser import parse_args_from_cli  # noqa: PLC0415
 
-    parse_args_from_cli(context=ctx, override_args=["preapprove", "1", "--hunk", "H01"])
+    parse_args_from_cli(context=ctx, override_args=["preapprove", "1", "H01"])
 
     loaded = mgr.load_state("r1")
     assert loaded is not None

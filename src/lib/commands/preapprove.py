@@ -15,14 +15,6 @@ def _resolve_path(state, item: str) -> str | None:
     return item if item in state.files else None
 
 
-def _parse_hunk_number(hunk_arg: str) -> int | None:
-    s = hunk_arg.strip().lstrip("Hh")
-    try:
-        return int(s)
-    except ValueError:
-        return None
-
-
 def _find_hunk_range(lines: list[str], hunk_num: int) -> tuple[int | None, int | None]:
     hunk_idx = 0
     hunk_start: int | None = None
@@ -36,6 +28,32 @@ def _find_hunk_range(lines: list[str], hunk_num: int) -> tuple[int | None, int |
     if hunk_start is not None:
         return hunk_start, len(lines)
     return None, None
+
+
+def _parse_range_arg(range_arg: str) -> tuple[str, int | None, int | None, int | None]:
+    """
+    Parses the unified range positional into (mode, hunk_num, start_line, end_line).
+
+    Supported forms:
+      N      → hunk N (plain integer or H/h-prefixed, e.g. H02)
+      N:M    → line range N to M
+      :M     → line range 1 to M
+      N:     → line range N to end of diff
+    Returns ('invalid', None, None, None) on parse error.
+    """
+    if ":" in range_arg:
+        start_str, _, end_str = range_arg.partition(":")
+        try:
+            start = int(start_str) if start_str else None
+            end = int(end_str) if end_str else None
+        except ValueError:
+            return ("invalid", None, None, None)
+        return ("lines", None, start, end)
+    stripped = range_arg.strip().lstrip("Hh")
+    try:
+        return ("hunk", int(stripped), None, None)
+    except ValueError:
+        return ("invalid", None, None, None)
 
 
 def impl(args: argparse.Namespace, context: Context):
@@ -55,11 +73,17 @@ def impl(args: argparse.Namespace, context: Context):
         print(f"Cleared preapproved blocks for {path}")
         return
 
-    if args.hunk is not None:
-        hunk_num = _parse_hunk_number(args.hunk)
-        if hunk_num is None:
-            print(f"Invalid hunk selector: {args.hunk}")
-            return
+    if args.range is None:
+        print("Provide hunk number, line range (N:M, :M, or N:), or --clear")
+        return
+
+    mode, hunk_num, start_line, end_line = _parse_range_arg(args.range)
+    if mode == "invalid":
+        print(f"Invalid range: {args.range!r}")
+        return
+
+    if mode == "hunk":
+        assert hunk_num is not None
         lines = diff_lines(path, diff_target=state.diff_target())
         start_line, end_line = _find_hunk_range(lines, hunk_num)
         if start_line is None or end_line is None:
@@ -72,31 +96,31 @@ def impl(args: argparse.Namespace, context: Context):
         print(f"Preapproved hunk {hunk_num} (lines {start_line}-{end_line}) of {path}")
         return
 
-    if args.start_line is None or args.end_line is None:
-        print("Provide start_line and end_line, or --hunk N, or --clear")
-        return
-
+    # mode == "lines"
+    if start_line is None:
+        start_line = 1
+    if end_line is None:
+        lines = diff_lines(path, diff_target=state.diff_target())
+        end_line = len(lines)
     notes: str = args.notes or ""
     context.state_manager.add_preapproved_block(
-        state, path=path, start_line=args.start_line, end_line=args.end_line, notes=notes
+        state, path=path, start_line=start_line, end_line=end_line, notes=notes
     )
     context.state_manager.save_state(state)
-    print(f"Preapproved lines {args.start_line}-{args.end_line} of {path}")
+    print(f"Preapproved lines {start_line}-{end_line} of {path}")
 
 
 def register(sub: argparse._SubParsersAction):
     p = sub.add_parser(
         "preapprove",
-        help="Mark diff line ranges as pre-approved, hiding them from future review diffs",
+        help="Mark diff hunks or line ranges as pre-approved, hiding them from future review diffs",
     )
     p.add_argument("file", help="File path or 1-based index from ls")
-    p.add_argument("start_line", nargs="?", type=int, help="Start diff line number (1-based)")
-    p.add_argument("end_line", nargs="?", type=int, help="End diff line number (1-based, inclusive)")
+    p.add_argument(
+        "range",
+        nargs="?",
+        help="Hunk number (e.g. 2 or H02), or line range (N:M, :M, or N:)",
+    )
     p.add_argument("--notes", default="", help="Optional notes about why this range is pre-approved")
     p.add_argument("--clear", action="store_true", help="Clear all preapproved blocks for this file")
-    p.add_argument(
-        "--hunk",
-        metavar="N",
-        help="Pre-approve a whole hunk by number (e.g. 1 or H01)",
-    )
     p.set_defaults(impl=impl)

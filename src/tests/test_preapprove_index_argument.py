@@ -21,7 +21,7 @@ def test_preapprove_accepts_file_index(tmp_path, capsys):
 
     from cli.parser import parse_args_from_cli  # noqa: PLC0415
 
-    parse_args_from_cli(context=ctx, override_args=["preapprove", "2", "10", "12"])
+    parse_args_from_cli(context=ctx, override_args=["preapprove", "2", "10:12"])
 
     out = capsys.readouterr().out
     assert "b.py" in out

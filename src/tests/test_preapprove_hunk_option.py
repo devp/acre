@@ -38,7 +38,7 @@ def test_preapprove_hunk_records_hunk_line_range(tmp_path, monkeypatch):
     from cli.parser import parse_args_from_cli  # noqa: PLC0415
 
     # Preapprove the first hunk (lines 4-6 in the rendered diff output).
-    parse_args_from_cli(context=ctx, override_args=["preapprove", "1", "--hunk", "1"])
+    parse_args_from_cli(context=ctx, override_args=["preapprove", "1", "1"])
 
     raw = json.loads((tmp_path / ".git" / "acre" / "r1.json").read_text())
     blocks = raw["files"]["f.py"]["preapproved_blocks"]
