@@ -167,51 +167,54 @@ class CommandsV0:
                             print(f"> Marked {lines} lines as reviewed (test preview)")
                             return True
 
-        file_state = self.state.files.get(path)
-        lines = diff_lines(path, diff_target=self.state.diff_target())
+        def _render_diff() -> None:
+            file_state = self.state.files.get(path)
+            lines = diff_lines(path, diff_target=self.state.diff_target())
 
-        if focus_regex:
-            lines = filter_diff_hunks_by_regex(
-                lines, pattern=focus_regex, include_context=regex_include_context
+            if focus_regex:
+                lines = filter_diff_hunks_by_regex(
+                    lines, pattern=focus_regex, include_context=regex_include_context
+                )
+
+            preapproved_blocks = file_state.preapproved_blocks if file_state else []
+            excluded = (
+                excluded_diff_line_numbers(preapproved_blocks=preapproved_blocks)
+                if preapproved_blocks
+                else set()
             )
 
-        preapproved_blocks = file_state.preapproved_blocks if file_state else []
-        excluded = (
-            excluded_diff_line_numbers(preapproved_blocks=preapproved_blocks)
-            if preapproved_blocks
-            else set()
-        )
-
-        if show_diff_line_numbers:
-            # Numbers always refer to pre-preapproval positions so they stay stable
-            # across multiple preapprove calls.
-            rendered: list[str] = []
-            hunk_idx = 0
-            for idx, line in enumerate(lines, start=1):
-                if idx in excluded:
-                    continue
-                if show_hunk_numbers and _strip_ansi(line).startswith("@@"):
-                    hunk_idx += 1
-                    prefix = f"\033[2m{idx:3d}: H{hunk_idx:02d} \033[0m"
-                else:
-                    prefix = f"\033[2m{idx:3d}: \033[0m"
-                rendered.append(f"{prefix}{line}")
-            lines = rendered
-        else:
-            if excluded:
-                lines = filter_diff_lines(lines, preapproved_blocks=preapproved_blocks)
-            if show_hunk_numbers:
-                annotated: list[str] = []
+            if show_diff_line_numbers:
+                # Numbers always refer to pre-preapproval positions so they stay stable
+                # across multiple preapprove calls.
+                rendered: list[str] = []
                 hunk_idx = 0
-                for line in lines:
-                    if _strip_ansi(line).startswith("@@"):
+                for idx, line in enumerate(lines, start=1):
+                    if idx in excluded:
+                        continue
+                    if show_hunk_numbers and _strip_ansi(line).startswith("@@"):
                         hunk_idx += 1
-                        annotated.append(f"H{hunk_idx:02d} {line}")
+                        prefix = f"\033[2m{idx:3d}: H{hunk_idx:02d} \033[0m"
                     else:
-                        annotated.append(line)
-                lines = annotated
+                        prefix = f"\033[2m{idx:3d}: \033[0m"
+                    rendered.append(f"{prefix}{line}")
+                lines = rendered
+            else:
+                if excluded:
+                    lines = filter_diff_lines(lines, preapproved_blocks=preapproved_blocks)
+                if show_hunk_numbers:
+                    annotated: list[str] = []
+                    hunk_idx = 0
+                    for line in lines:
+                        if _strip_ansi(line).startswith("@@"):
+                            hunk_idx += 1
+                            annotated.append(f"H{hunk_idx:02d} {line}")
+                        else:
+                            annotated.append(line)
+                    lines = annotated
 
-        print("".join(lines), end="")
+            print("".join(lines), end="")
+
+        _render_diff()
 
         if not ask_approve:
             return
@@ -245,6 +248,7 @@ class CommandsV0:
                 self.state_manager.save_state(current_state)
                 print(f"Preapproved lines {s}-{e} of {path}")
             self.state = current_state
+            _render_diff()
 
         if not mark_reviewed_prompt(
             path=path,
