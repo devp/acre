@@ -12,6 +12,15 @@ class StateManagerProtocol(Protocol):
     def save_state(self, __state: ReviewState) -> None: ...
     def mark_file_reviewed(self, __state: ReviewState, __path: str) -> None: ...
     def do_reset(self, __state: ReviewState) -> None: ...
+    def add_preapproved_block(
+        self,
+        __state: ReviewState,
+        *,
+        path: str,
+        start_line: int,
+        end_line: int,
+        notes: str = "",
+    ) -> None: ...
 
 
 class StateManager:

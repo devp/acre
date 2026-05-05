@@ -71,6 +71,7 @@ def mark_reviewed_prompt(
     prompt: str = "Mark reviewed?",
     default: bool = False,
     on_peek: Callable[[], bool] | None = None,
+    on_preapprove: Callable[[str], None] | None = None,
     input_fn: Callable[[str], str] = input,
     env: Mapping[str, str] | None = None,
     run: Callable[..., object] = subprocess.run,
@@ -84,17 +85,22 @@ def mark_reviewed_prompt(
     - n / no
     - e / edit (opens $EDITOR for the file, then re-prompts)
     - w / webpeek (opens the GitHub diff view for the file, then re-prompts)
+    - p <range>  preapprove a hunk or line range inline, then re-prompts
     - empty input returns `default`
     """
     while True:
-        ans = input_fn(f"{prompt} [{'Y/n/e/w' if default else 'y/N/e/w'}] ").strip().lower()
+        hint = "Y/n/e/w" if default else "y/N/e/w"
+        if on_preapprove is not None:
+            hint += "/p <hunk|range>"
+        ans = input_fn(f"{prompt} [{hint}] ").strip()
+        lower = ans.lower()
         if not ans:
             return default
-        if ans in {"y", "yes"}:
+        if lower in {"y", "yes"}:
             return True
-        if ans in {"n", "no"}:
+        if lower in {"n", "no"}:
             return False
-        if ans in {"e", "edit"}:
+        if lower in {"e", "edit"}:
             effective_env = os.environ if env is None else env
             editor = effective_env.get("EDITOR", "").strip()
             if not editor:
@@ -102,9 +108,14 @@ def mark_reviewed_prompt(
                 continue
             open_in_editor(path, env=env, run=run, print_fn=print_fn)
             continue
-        if ans in {"w", "webpeek"}:
+        if lower in {"w", "webpeek"}:
             if on_peek is None:
                 print_fn("Webpeek is not available for this file.")
                 continue
             on_peek()
+            continue
+        if on_preapprove is not None and lower.startswith("p "):
+            range_str = ans[2:].strip()
+            if range_str:
+                on_preapprove(range_str)
             continue

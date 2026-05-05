@@ -25,6 +25,7 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
         def save_state(self, _state): pass
         def mark_file_reviewed(self, _state, _path): pass
         def do_reset(self, _state): pass
+        def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
     calls: list[tuple[str, object]] = []
 
@@ -78,6 +79,7 @@ def test_review_impl_passes_test_diff_first_to_cmd_review(monkeypatch):
         def save_state(self, _state): pass
         def mark_file_reviewed(self, _state, _path): pass
         def do_reset(self, _state): pass
+        def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
     class FakeCommandsV0:
         def __init__(self, **_kwargs):
@@ -111,6 +113,7 @@ def test_review_impl_uses_config_default_for_test_diff_first(monkeypatch):
         def save_state(self, _state): pass
         def mark_file_reviewed(self, _state, _path): pass
         def do_reset(self, _state): pass
+        def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
     class FakeCommandsV0:
         def __init__(self, **_kwargs):
@@ -154,6 +157,7 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
             calls.append(("save", ""))
 
         def do_reset(self, _state): pass
+        def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
     def fake_diff_filtered(path, *, diff_target, line_patterns):
         calls.append(("diff_filtered", (path, diff_target, tuple(line_patterns))))
@@ -236,6 +240,7 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
             calls.append(("save", ""))
 
         def do_reset(self, _state): pass
+        def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
     def fake_diff_lines(path, diff_target="main"):
         calls.append(("diff_lines", (path, diff_target)))

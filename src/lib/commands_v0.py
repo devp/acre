@@ -6,6 +6,7 @@ from hashlib import sha256
 from cli.pretty import print_whimsically
 from cli.util import mark_reviewed_prompt, open_url, yn
 from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
+from lib.commands.preapprove import _find_hunk_range, _parse_range_arg
 from lib.diff_filter import excluded_diff_line_numbers, filter_diff_lines
 from lib.hunk_filter import _strip_ansi, filter_diff_hunks_by_regex
 from lib.sources.git import diff_filtered, diff_lines
@@ -214,10 +215,42 @@ class CommandsV0:
 
         if not ask_approve:
             return
+
+        def _on_preapprove(range_str: str) -> None:
+            mode_p, hunk_num, start_line_p, end_line_p = _parse_range_arg(range_str)
+            if mode_p == "invalid":
+                print(f"Invalid range: {range_str!r}")
+                return
+            current_state = self.state_manager.load_state(self.key)
+            if current_state is None:
+                return
+            if mode_p == "hunk":
+                assert hunk_num is not None
+                all_lines = diff_lines(path, diff_target=current_state.diff_target())
+                s, e = _find_hunk_range(all_lines, hunk_num)
+                if s is None or e is None:
+                    print(f"Hunk {hunk_num} not found")
+                    return
+                self.state_manager.add_preapproved_block(current_state, path=path, start_line=s, end_line=e)
+                self.state_manager.save_state(current_state)
+                print(f"Preapproved hunk {hunk_num} (lines {s}-{e}) of {path}")
+            else:
+                s = start_line_p if start_line_p is not None else 1
+                if end_line_p is None:
+                    all_lines = diff_lines(path, diff_target=current_state.diff_target())
+                    e = len(all_lines)
+                else:
+                    e = end_line_p
+                self.state_manager.add_preapproved_block(current_state, path=path, start_line=s, end_line=e)
+                self.state_manager.save_state(current_state)
+                print(f"Preapproved lines {s}-{e} of {path}")
+            self.state = current_state
+
         if not mark_reviewed_prompt(
             path=path,
             prompt="Mark reviewed?",
             on_peek=lambda: self.cmd_peek(path),
+            on_preapprove=_on_preapprove,
         ):
             return
         self.state_manager.mark_file_reviewed(self.state, path)

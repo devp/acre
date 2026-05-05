@@ -70,3 +70,20 @@ def test_mark_reviewed_prompt_peek_runs_callback_then_accepts_yes():
 
     assert mark_reviewed_prompt(path="peek.py", input_fn=input_fn, on_peek=on_peek) is True
     assert calls == ["peek"]
+
+
+def test_mark_reviewed_prompt_p_range_calls_preapprove_then_accepts_yes():
+    inputs = iter(["p 2", "p 10:20", "y"])
+    preapprove_calls: list[str] = []
+
+    def input_fn(_prompt: str) -> str:
+        return next(inputs)
+
+    def on_preapprove(range_str: str) -> None:
+        preapprove_calls.append(range_str)
+
+    assert (
+        mark_reviewed_prompt(path="f.py", input_fn=input_fn, on_preapprove=on_preapprove)
+        is True
+    )
+    assert preapprove_calls == ["2", "10:20"]
