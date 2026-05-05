@@ -32,11 +32,12 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
         calls.append(("diff_filtered", (path, diff_target, tuple(line_patterns))))
         return 1
 
-    def fake_diff(path, diff_target="main"):
-        calls.append(("diff", (path, diff_target)))
+    def fake_diff_lines(path, diff_target="main"):
+        calls.append(("diff_lines", (path, diff_target)))
+        return []
 
     monkeypatch.setattr(commands_v0, "diff_filtered", fake_diff_filtered)
-    monkeypatch.setattr(commands_v0, "diff", fake_diff)
+    monkeypatch.setattr(commands_v0, "diff_lines", fake_diff_lines)
 
     cmd = commands_v0.CommandsV0(
         key="rid",
@@ -54,7 +55,7 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
 
     cmd.cmd_review("test_widget.py", ask_approve=False, test_diff_first=True)
 
-    assert [c[0] for c in calls] == ["diff_filtered", "diff"]
+    assert [c[0] for c in calls] == ["diff_filtered", "diff_lines"]
     assert calls[0][1] == (
         "test_widget.py",
         "main",
@@ -158,11 +159,7 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
         calls.append(("diff_filtered", (path, diff_target, tuple(line_patterns))))
         return 1
 
-    def fake_diff(path, diff_target="main"):
-        calls.append(("diff", (path, diff_target)))
-
     monkeypatch.setattr(commands_v0, "diff_filtered", fake_diff_filtered)
-    monkeypatch.setattr(commands_v0, "diff", fake_diff)
     monkeypatch.setattr("builtins.input", lambda _prompt: "y")
 
     cmd = commands_v0.CommandsV0(
@@ -240,11 +237,12 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
 
         def do_reset(self, _state): pass
 
-    def fake_diff(path, diff_target="main"):
-        calls.append(("diff", (path, diff_target)))
+    def fake_diff_lines(path, diff_target="main"):
+        calls.append(("diff_lines", (path, diff_target)))
+        return []
 
     inputs = iter(["p", "y"])
-    monkeypatch.setattr(commands_v0, "diff", fake_diff)
+    monkeypatch.setattr(commands_v0, "diff_lines", fake_diff_lines)
     monkeypatch.setattr(commands_v0, "open_url", lambda url: calls.append(("open", url)) or True)
     monkeypatch.setattr(
         commands_v0,
@@ -263,4 +261,4 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
 
     cmd.cmd_review("test_widget.py", ask_approve=True, test_diff_first=False)
 
-    assert [c[0] for c in calls] == ["diff", "open", "mark", "save"]
+    assert [c[0] for c in calls] == ["diff_lines", "open", "mark", "save"]
