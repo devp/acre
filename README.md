@@ -19,10 +19,10 @@ is related to a Github PR (i.e. `gh pr checkout`).
 
 ```
 usage: codereview.py [-h]
-                     {init,status,ls,overview,reset,metadata,approve,peek,review,interactive} ...
+                     {init,status,ls,overview,reset,metadata,approve,peek,review,preapprove,interactive} ...
 
 positional arguments:
-  {init,status,ls,overview,reset,metadata,approve,peek,review,interactive}
+  {init,status,ls,overview,reset,metadata,approve,peek,review,preapprove,interactive}
     init                Initialize a new code review session
     status              Status of review
     ls                  List of files for this review, including their
@@ -31,11 +31,38 @@ positional arguments:
     metadata            Get metadata from review state, output as JSON
     approve             Approve the current PR after confirmation
     peek                Open a file in the GitHub PR diff view (e.g. for comments)
+    review              Review one or more files
+    preapprove          Mark diff line ranges as pre-approved, hiding them
+                        from future review diffs
     interactive         Starts an interactive session
 
 options:
   -h, --help            show this help message and exit
 ```
+
+### Preapproval workflow
+
+`preapprove` lets you hide diff ranges you've already processed (e.g. generated code, noise, boilerplate) so subsequent `review` runs show only what remains.
+
+```bash
+# See diff line numbers to identify a range to hide
+acre review 3 --diff-line-numbers
+
+# Hide lines 12–18 of file #3
+acre preapprove 3 12 18 --notes "generated types"
+
+# Or pre-approve a whole hunk by number
+acre review 3 --hunk-numbers          # shows H01, H02, …
+acre preapprove 3 --hunk 2            # hides hunk 2 entirely
+
+# Focus a review on hunks matching a pattern
+acre review 3 --focus-regex "async def"
+
+# Clear all pre-approvals for a file
+acre preapprove 3 --clear
+```
+
+Pre-approved line numbers refer to the 1-based position in the rendered diff output (as shown by `--diff-line-numbers`), **not** source-file line numbers. Numbers stay stable across multiple `preapprove` calls on the same file.
 
 Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)
 
