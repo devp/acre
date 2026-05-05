@@ -58,8 +58,10 @@ class CommandsV0:
                 continue
             file = self.state.files.get(path)
             lines = file.lines if file else 0
+            pa_count = len(file.preapproved_blocks) if file and file.preapproved_blocks else 0
+            pa_str = f" [{pa_count} PA]" if pa_count else ""
             mark = "\u2705 " if reviewed else ""
-            print(f"{idx}. {mark}{path:25} Δ{lines}")
+            print(f"{idx}. {mark}{path:25} Δ{lines}{pa_str}")
 
     def cmd_status(self):
         total = self.state.total_lines()
