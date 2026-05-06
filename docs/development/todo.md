@@ -13,4 +13,3 @@
 
 - doc: explain my code review philosophy (and give context to this script)
 - doc: quickstart
-- python version: determine how low a version of 3.x can be supported
