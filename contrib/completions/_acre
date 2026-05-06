@@ -1,0 +1,102 @@
+#compdef acre
+# Zsh completion for acre
+#
+# Setup (choose one):
+#   1. Copy/symlink to a dir in $fpath, e.g.:
+#        ln -s ~/code/misc/acre/contrib/completions/_acre ~/.zsh/completions/_acre
+#        # ensure ~/.zsh/completions is in your fpath before compinit
+#
+#   2. Source directly in ~/.zshrc (after compinit):
+#        source ~/code/misc/acre/contrib/completions/_acre
+#        compdef _acre acre
+#
+#   3. One-liner in ~/.zshrc:
+#        fpath=(~/code/misc/acre/contrib/completions $fpath)
+#        # (must come before `compinit`)
+
+_acre() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :->cmd' \
+    '*: :->args'
+
+  case $state in
+    cmd)
+      local commands=(
+        'init:Initialize a new code review session'
+        'status:Status of review'
+        'ls:List files for this review with numbered indexes'
+        'overview:Print overview of request context, status, and files'
+        'reset:Reset the progress of the code review'
+        'metadata:Get metadata from review state as JSON'
+        'approve:Approve the current PR after confirmation'
+        'aliases:List all configured aliases'
+        'webpeek:Open a changed file in the GitHub PR diff view'
+        'review:Review one or more files'
+        'preapprove:Mark diff hunks or line ranges as pre-approved'
+        'interactive:Start an interactive review session'
+        'help:Show help'
+        'h:Show help'
+        '?:Show help'
+      )
+      _describe 'command' commands
+      ;;
+
+    args)
+      case $words[2] in
+        init)
+          _arguments \
+            '--review-id[Custom review identifier]:id' \
+            '--force[Overwrite existing state file]' \
+            '--git-range[Git range for diff (e.g. main..HEAD)]:range'
+          ;;
+
+        ls)
+          _arguments \
+            '--todo[Only list unreviewed files]' \
+            '--raw[Output raw filenames only, one per line]'
+          ;;
+
+        reset)
+          _arguments \
+            '--destroy[Delete the state file entirely]'
+          ;;
+
+        review)
+          _arguments \
+            '*:file path or 1-based index from ls' \
+            '--todo[Only review unreviewed files]' \
+            '--skim[Show all diffs and ask for approval as a whole]' \
+            '--loc-lte[Only review files with lines changed <= N]:N' \
+            '--test-diff-first[Show test diff subset before full diff]' \
+            '--focus-regex[Only show hunks where a changed line matches regex]:regex' \
+            '--regex-include-context[Also match context lines with --focus-regex]' \
+            '--diff-line-numbers[Prefix each diff line with its 1-based line number]' \
+            '--hunk-numbers[Annotate each hunk header with a 1-based hunk number]'
+          ;;
+
+        preapprove)
+          _arguments \
+            '1:file path or 1-based index from ls' \
+            '2:hunk number (e.g. 2 or H02) or line range (N:M, :M, N\:)' \
+            '--notes[Notes about why this range is pre-approved]:notes' \
+            '--clear[Clear all preapproved blocks for this file]'
+          ;;
+
+        webpeek)
+          _arguments \
+            '1:file path, basename, or numeric index from ls'
+          ;;
+
+        interactive)
+          _arguments \
+            '(-y --auto-yes)'{-y,--auto-yes}'[Automatically answer yes to initialization prompts]'
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_acre

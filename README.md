@@ -81,6 +81,30 @@ Mark reviewed? [y/N/e/w/p <hunk|range>] y
 
 Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)
 
+### Shell autocomplete
+
+Completion scripts for zsh, bash, and fish are in `contrib/completions/`.
+
+**Zsh** — add to `~/.zshrc` before `compinit`:
+```zsh
+fpath=(~/code/misc/acre/contrib/completions $fpath)
+```
+Or after `compinit`:
+```zsh
+source ~/code/misc/acre/contrib/completions/_acre
+compdef _acre acre
+```
+
+**Bash** — add to `~/.bashrc`:
+```bash
+source ~/code/misc/acre/contrib/completions/acre.bash
+```
+
+**Fish:**
+```fish
+ln -s ~/code/misc/acre/contrib/completions/acre.fish ~/.config/fish/completions/acre.fish
+```
+
 ## Requirements
 
 - Python 3.x
