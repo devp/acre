@@ -112,6 +112,13 @@ One of:
 * acre = ACRE Code Review via ECRA *(wow.)*
   * ECRA = enhanced command-line routine for ACRE *(WOW.)*
 
+## Roadmap / TODOs
+
+- `1.0`: a version I'm confident that others can use
+    - [ ] enh: autocomplete for cli
+    - [ ] doc: explain my code review philosophy (and give context to this script)
+    - [ ] doc: quickstart
+
 ## Credits
 
 Thanks to my lovely spouse, @labmouse, for encouraging me to follow my inspirations
