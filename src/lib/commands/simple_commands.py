@@ -56,6 +56,19 @@ def impl_metadata(context: Context, **_):
     print(json.dumps(state.metadata, indent=2))
 
 
+def print_aliases(config: dict):
+    aliases = config.get("aliases")
+    if aliases:
+        for k, v in aliases.items():
+            print(f"  {k} → {v}")
+    else:
+        print("No aliases configured.")
+
+
+def impl_aliases(context: Context, **_):
+    print_aliases(context.config)
+
+
 def impl_approve(context: Context, **_):
     cmdv0 = CommandsV0(
         key=context.key,
@@ -90,6 +103,8 @@ def register(sub: argparse._SubParsersAction):
     metadata.set_defaults(impl=impl_metadata)
     approve = sub.add_parser("approve", help="Approve the current PR after confirmation")
     approve.set_defaults(impl=impl_approve)
+    aliases = sub.add_parser("aliases", help="List all configured aliases")
+    aliases.set_defaults(impl=impl_aliases)
     peek = sub.add_parser("webpeek", help="Open a changed file in the GitHub PR diff view by path or index")
     peek.add_argument("item", help="File path, basename (if unique), or numeric index from `ls`")
     peek.set_defaults(impl=impl_peek)

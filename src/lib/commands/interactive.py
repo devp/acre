@@ -7,7 +7,7 @@ from cli.context import Context
 from cli.util import yn
 from lib.commands.preapprove import register as register_preapprove
 from lib.commands.review import register as register_review
-from lib.commands.simple_commands import impl_status, register as register_simple
+from lib.commands.simple_commands import impl_status, print_aliases, register as register_simple
 from lib.config.config import (
     get_default_interact_command_for_args,
     resolve_cmd_from_config_aliases,
@@ -27,10 +27,8 @@ def _build_interactive_parser(config: dict):
     # Interactive-only command (help)
     def impl_help(**_):
         p.print_usage()
-        aliases = config.get("aliases")
-        if aliases:
-            pairs = ", ".join(f"{k} → {v}" for k, v in aliases.items())
-            print(f"Aliases: {pairs}")
+        print("Aliases:")
+        print_aliases(config)
     help = sub.add_parser("help", aliases=["h", "?"])
     help.set_defaults(impl=impl_help)
 
