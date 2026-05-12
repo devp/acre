@@ -90,16 +90,11 @@ Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)
     - justfile (to run tasks; or you can read the file and run them yourself)
     - uv (to run the tasks; `uv sync --dev`, then `just test`)
 
-## Roadmap
-
-=> `./docs/development/todo.md`
-
 ## Notes
 
 ### Why `acre`?
 
-- TODO: write about my code review philosophy and workflow
-- See also `./docs/development/spec.md` for my initial spec, which captures some of my goals.
+tl;dr - this is the tool I've wished for based on my mental model for good code review.
 
 ### What does `acre` stand for?
 
