@@ -10,6 +10,12 @@ default_commands = "status"
 # Example: default_interact_command_for_args = "review --todo"
 # default_interact_command_for_args = "review"
 
+# In interactive mode, pressing Enter on an empty line runs this command.
+# If unset, empty Enter is a no-op (the status prompt is shown again).
+# Type "quit" or "exit" (or Ctrl-D) to leave interactive mode.
+# Example: default_interact_enter_command = "ls --todo"
+# default_interact_enter_command = "ls --todo"
+
 [aliases]
 # Example alias: `st` will be expanded to `status`
 st = "status"
