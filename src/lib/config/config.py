@@ -56,6 +56,22 @@ def get_default_commands(config: Dict) -> List[str]:
             return default_commands
     return []
 
+def get_default_interact_enter_command(config: Dict) -> Optional[List[str]]:
+    """
+    Returns a command (as argv tokens) to run in interactive mode when the user
+    presses Enter on an empty line. If unset, returns None (empty Enter is a no-op).
+    """
+    raw = config.get("default_interact_enter_command")
+    if not raw:
+        return None
+    if isinstance(raw, str):
+        tokens = shlex.split(raw)
+        return tokens if tokens else None
+    if isinstance(raw, list):
+        return raw if raw else None
+    return None
+
+
 def get_default_interact_command_for_args(config: Dict) -> Optional[List[str]]:
     """
     Returns a command (as argv tokens) to prepend in interactive mode when the user
