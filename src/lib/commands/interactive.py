@@ -10,6 +10,7 @@ from lib.commands.review import register as register_review
 from lib.commands.simple_commands import impl_status, print_aliases, register as register_simple
 from lib.config.config import (
     get_default_interact_command_for_args,
+    get_default_interact_enter_command,
     resolve_cmd_from_config_aliases,
 )
 from lib.initialize import cmd_init
@@ -107,16 +108,26 @@ def impl_interactive(context: Context, args=None, **_):
     history_file = _setup_readline()
     
     parser = _build_interactive_parser(config=context.config)
+    enter_cmd = get_default_interact_enter_command(context.config)
     try:
         while True:
             try:
                 impl_status(context=context)
                 line = input("> ")
-                if not line.strip():
+                stripped = line.strip()
+                if stripped in ("quit", "exit"):
                     break
-                try:
+                if not stripped:
+                    if enter_cmd:
+                        expanded_args = _expand_interactive_argv(
+                            raw_args=enter_cmd, config=context.config
+                        )
+                    else:
+                        continue
+                else:
                     raw_args = shlex.split(line)
                     expanded_args = _expand_interactive_argv(raw_args=raw_args, config=context.config)
+                try:
                     args = parser.parse_args(args=expanded_args)
                     if "impl" in args:
                         args.impl(args=args, context=context)
