@@ -50,6 +50,8 @@ class CommandsV0:
     def cmd_list_files(self, todo_only=False, raw=False):
         if not raw:
             print("\n\U0001F4C1 File Summary:")
+        test_patterns = get_review_test_file_patterns(self.config)
+        compiled_test_patterns = [re.compile(p) for p in test_patterns] if test_patterns else []
         for idx, path in enumerate(self.state.files, 1):
             reviewed = self.state.is_file_reviewed(path)
             if todo_only and reviewed:
@@ -62,7 +64,11 @@ class CommandsV0:
             pa_count = len(file.preapproved_blocks) if file and file.preapproved_blocks else 0
             pa_str = f" [{pa_count} PA]" if pa_count else ""
             mark = "\u2705 " if reviewed else ""
-            print(f"{idx}. {mark}{path:25} Δ{lines}{pa_str}")
+            padded_path = f"{path:25}"
+            basename = os.path.basename(path)
+            is_test = any(p.search(basename) for p in compiled_test_patterns)
+            colored_path = f"\033[96m{padded_path}\033[0m" if is_test else padded_path
+            print(f"{idx}. {mark}{colored_path} Δ{lines}{pa_str}")
 
     def cmd_status(self):
         total = self.state.total_lines()
