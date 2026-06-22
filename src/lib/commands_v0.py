@@ -3,7 +3,7 @@ import re
 import subprocess
 from hashlib import sha256
 
-from cli.pretty import print_whimsically
+from cli.pretty import print_whimsically, progress_bar
 from cli.util import mark_reviewed_prompt, open_url, yn
 from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
 from lib.commands.preapprove import _find_hunk_range, _parse_range_arg
@@ -73,13 +73,14 @@ class CommandsV0:
     def cmd_status(self):
         total = self.state.total_lines()
         reviewed = self.state.total_reviewed_lines()
-        remaining = total - reviewed
         pct = int((reviewed / total) * 100) if total else (100 if reviewed else 0)
         num_files = len(self.state.files)
         num_files_reviewed = len(self.state.reviewed_files())
         files_left = num_files - num_files_reviewed
-        text = f"> {remaining} lines remaining | {pct}% reviewed | {files_left} files touched"
-        if files_left == 0 and num_files > 0:
+        whimsical = files_left == 0 and num_files > 0
+        bar = progress_bar(pct, color=not whimsical)
+        text = f"{bar} | {files_left} files left"
+        if whimsical:
             print_whimsically(text)
         else:
             print(text)
