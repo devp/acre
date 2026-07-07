@@ -11,6 +11,7 @@ class StateManagerProtocol(Protocol):
     def load_state(self, __key: str) -> Optional[ReviewState]: ...
     def save_state(self, __state: ReviewState) -> None: ...
     def mark_file_reviewed(self, __state: ReviewState, __path: str) -> None: ...
+    def unmark_file_reviewed(self, __state: ReviewState, __path: str) -> None: ...
     def do_reset(self, __state: ReviewState) -> None: ...
     def add_preapproved_block(
         self,
@@ -159,6 +160,12 @@ class StateManager:
         if f is None:
             raise Exception(f"Not found for approval: {f}")
         f.approved_sha = self.current_sha
+
+    def unmark_file_reviewed(self, state: ReviewState, path: str):
+        f = state.files.get(path)
+        if f is None:
+            raise Exception(f"Not found for unapproval: {path}")
+        f.approved_sha = None
 
     def add_preapproved_block(
         self,

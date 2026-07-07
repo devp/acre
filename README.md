@@ -19,10 +19,10 @@ is related to a Github PR (i.e. `gh pr checkout`).
 
 ```
 usage: codereview.py [-h]
-                     {init,status,ls,overview,reset,metadata,approve,webpeek,review,preapprove,interactive} ...
+                     {init,status,ls,overview,reset,metadata,approve,webpeek,review,preapprove,unapprove,interactive} ...
 
 positional arguments:
-  {init,status,ls,overview,reset,metadata,approve,webpeek,review,preapprove,interactive}
+  {init,status,ls,overview,reset,metadata,approve,webpeek,review,preapprove,unapprove,interactive}
     init                Initialize a new code review session
     status              Status of review
     ls                  List of files for this review, including their
@@ -35,6 +35,7 @@ positional arguments:
     review              Review one or more files
     preapprove          Mark diff line ranges as pre-approved, hiding them
                         from future review diffs
+    unapprove           Revert one or more files back to unreviewed
     interactive         Starts an interactive session
 
 options:
@@ -77,6 +78,16 @@ Preapproved hunk 2 (lines 7-14) of src/api.py
 Mark reviewed? [y/N/e/w/p <hunk|range>] p 40:55
 Preapproved lines 40-55 of src/api.py
 Mark reviewed? [y/N/e/w/p <hunk|range>] y
+```
+
+### Unapproving a file
+
+`unapprove` reverts one or more already-reviewed files back to unreviewed, by path or by index from `ls`. It's CLI-only (not exposed in `interactive`), and requires at least one file/index argument.
+
+```bash
+acre unapprove src/api.py     # by path
+acre unapprove 3              # by index from `ls`
+acre unapprove 3 5 src/api.py # multiple at once
 ```
 
 Custom aliases are encouraged for the script (see `./docs/suggested-aliases.sh`)

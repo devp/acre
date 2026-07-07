@@ -24,6 +24,7 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
 
         def save_state(self, _state): pass
         def mark_file_reviewed(self, _state, _path): pass
+        def unmark_file_reviewed(self, _state, _path): pass
         def do_reset(self, _state): pass
         def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
@@ -78,6 +79,7 @@ def test_review_impl_passes_test_diff_first_to_cmd_review(monkeypatch):
 
         def save_state(self, _state): pass
         def mark_file_reviewed(self, _state, _path): pass
+        def unmark_file_reviewed(self, _state, _path): pass
         def do_reset(self, _state): pass
         def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
@@ -112,6 +114,7 @@ def test_review_impl_uses_config_default_for_test_diff_first(monkeypatch):
 
         def save_state(self, _state): pass
         def mark_file_reviewed(self, _state, _path): pass
+        def unmark_file_reviewed(self, _state, _path): pass
         def do_reset(self, _state): pass
         def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
@@ -152,6 +155,8 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
         def mark_file_reviewed(self, _state, path):
             calls.append(("mark", path))
             state.files[path].approved_sha = "newsha"
+
+        def unmark_file_reviewed(self, _state, _path): pass
 
         def save_state(self, _state):
             calls.append(("save", ""))
@@ -235,6 +240,8 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
         def mark_file_reviewed(self, _state, path):
             calls.append(("mark", path))
             state.files[path].approved_sha = "newsha"
+
+        def unmark_file_reviewed(self, _state, _path): pass
 
         def save_state(self, _state):
             calls.append(("save", ""))
