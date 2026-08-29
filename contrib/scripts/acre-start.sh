@@ -1,6 +1,12 @@
-alias acre=~/code/misc/acre/src/codereview.py
-
 set -e
+
+# Resolve the acre CLI: prefer one on PATH, else $ACRE, else the local checkout.
+if command -v acre >/dev/null 2>&1; then
+  acre=acre
+else
+  acre="${ACRE:-$HOME/code/misc/acre/src/codereview.py}"
+  [[ -x "$acre" ]] || { echo "acre CLI not found; set \$ACRE or symlink it onto PATH" >&2; exit 1; }
+fi
 
 repo="$1"
 pr="$2"
@@ -55,6 +61,6 @@ git diff --exit-code -s
 git checkout main
 git pull --ff-only -q
 gh pr dco $pr
-acre init
-acre overview
-acre interactive
+"$acre" init
+"$acre" overview
+"$acre" interactive
