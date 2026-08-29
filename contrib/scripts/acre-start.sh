@@ -27,7 +27,29 @@ if [[ -z "$repo" || -z "$pr" ]]; then
 fi
 
 echo "acre-start => repo $repo @ PR #$pr"
-cd "$HOME/code/reviews/$repo" || exit 1
+
+reviews_dir="$HOME/code/reviews"
+repo_dir="$reviews_dir/$repo"
+
+confirm() {
+  local reply
+  read -r -p "$1 [y/N] " reply
+  [[ "$reply" == [yY] || "$reply" == [yY][eE][sS] ]]
+}
+
+if [[ ! -d "$reviews_dir" ]]; then
+  confirm "Reviews dir $reviews_dir missing. Create it?" || { echo "Aborting: no reviews dir." >&2; exit 1; }
+  mkdir -p "$reviews_dir"
+fi
+
+if [[ ! -d "$repo_dir" ]]; then
+  confirm "Repo dir $repo_dir missing. Clone it now?" || { echo "Aborting: no repo dir." >&2; exit 1; }
+  read -r -p "Clone source (owner/repo or URL): " clone_src
+  [[ -n "$clone_src" ]] || { echo "Aborting: no clone source." >&2; exit 1; }
+  gh repo clone "$clone_src" "$repo_dir"
+fi
+
+cd "$repo_dir" || exit 1
 git diff --cached --exit-code -s
 git diff --exit-code -s
 git checkout main
