@@ -58,7 +58,9 @@ fi
 cd "$repo_dir" || exit 1
 git diff --cached --exit-code -s
 git diff --exit-code -s
-git checkout main
+default_branch="$(git remote show origin | sed -n 's/.*HEAD branch: //p')"
+[[ -n "$default_branch" ]] || { echo "Could not determine default branch for origin." >&2; exit 1; }
+git checkout "$default_branch"
 git pull --ff-only -q
 gh pr dco $pr
 "$acre" init
