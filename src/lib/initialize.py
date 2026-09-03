@@ -2,7 +2,7 @@ import sys
 from typing import Optional
 
 from lib.review_identifier import ReviewIdentifier
-from lib.sources.git import data_from_git_range
+from lib.sources.git import data_from_git_range, resolve_upbranch_range
 from lib.sources.github import data_from_gh
 from lib.state import StateManager
 
@@ -23,6 +23,8 @@ def cmd_init(state_manager: StateManager, review_id: Optional[str] = None, force
         
         # Get data for initial files and line counts
         if git_range:
+            if git_range == "upbranch":
+                git_range = resolve_upbranch_range()
             gh_data = data_from_git_range(git_range)
             print(f"Using git range: {git_range}")
         else:

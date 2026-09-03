@@ -29,6 +29,51 @@ def get_repo_root() -> str:
     except subprocess.CalledProcessError:
         raise ValueError("Not in a git repository")
 
+def get_default_branch() -> str:
+    """Determine the remote's default branch (e.g. main), local ref first."""
+    try:
+        result = subprocess.run(
+            ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip().removeprefix("refs/remotes/origin/")
+    except subprocess.CalledProcessError:
+        pass
+
+    try:
+        result = subprocess.run(
+            ["git", "remote", "show", "origin"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if line.startswith("HEAD branch:"):
+                return line.split(":", 1)[1].strip()
+    except subprocess.CalledProcessError:
+        pass
+
+    raise ValueError("Unable to determine default branch for origin")
+
+
+def resolve_upbranch_range() -> str:
+    """Git range from where the current branch diverged from the default branch, to HEAD."""
+    default_branch = get_default_branch()
+    try:
+        result = subprocess.run(
+            ["git", "merge-base", default_branch, "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Unable to find merge base with '{default_branch}': {e}")
+    return f"{result.stdout.strip()}..HEAD"
+
+
 def get_current_branch() -> str:
     try:
         result = subprocess.run(
