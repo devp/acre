@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -72,13 +73,31 @@ def diff(path, diff_target = "main"):
 
 
 def diff_lines(path: str, diff_target: str = "main") -> list[str]:
-    result = subprocess.run(
-        ["git", "diff", "--color=always", diff_target, "--", path],
+    delta_path = shutil.which("delta")
+    if delta_path is None:
+        result = subprocess.run(
+            ["git", "diff", "--color=always", diff_target, "--", path],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.splitlines(keepends=True)
+
+    git_result = subprocess.run(
+        ["git", "diff", diff_target, "--", path],
         check=False,
         capture_output=True,
         text=True,
     )
-    return result.stdout.splitlines(keepends=True)
+    # --color-only forces color even though stdout is a pipe, not a tty.
+    delta_result = subprocess.run(
+        [delta_path, "--color-only", "--paging=never"],
+        input=git_result.stdout,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return delta_result.stdout.splitlines(keepends=True)
 
 
 def diff_filtered(
