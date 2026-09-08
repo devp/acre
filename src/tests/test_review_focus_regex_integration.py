@@ -18,7 +18,7 @@ def test_review_focus_regex_filters_output_to_matching_hunks(tmp_path, monkeypat
     mgr.save_state(state)
     ctx = Context(key="r1", state_manager=mgr, config={})
 
-    def fake_diff_lines(path: str, diff_target: str = "main") -> list[str]:
+    def fake_diff_lines(path: str, diff_target: str = "main", git_args=None) -> list[str]:
         assert path == "f.py"
         return [
             "diff --git a/f.py b/f.py\n",

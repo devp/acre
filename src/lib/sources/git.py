@@ -112,16 +112,16 @@ def get_current_commit_sha() -> str:
     except subprocess.CalledProcessError:
         raise ValueError("Unable to get current commit SHA")
 
-def diff(path, diff_target = "main"):
-    args = ["git", "diff", diff_target, "--", path]
+def diff(path, diff_target = "main", git_args: list[str] | None = None):
+    args = ["git", "diff", *(git_args or []), diff_target, "--", path]
     subprocess.run(args)
 
 
-def diff_lines(path: str, diff_target: str = "main") -> list[str]:
+def diff_lines(path: str, diff_target: str = "main", git_args: list[str] | None = None) -> list[str]:
     delta_path = shutil.which("delta")
     if delta_path is None:
         result = subprocess.run(
-            ["git", "diff", "--color=always", diff_target, "--", path],
+            ["git", "diff", "--color=always", *(git_args or []), diff_target, "--", path],
             check=False,
             capture_output=True,
             text=True,
@@ -129,7 +129,7 @@ def diff_lines(path: str, diff_target: str = "main") -> list[str]:
         return result.stdout.splitlines(keepends=True)
 
     git_result = subprocess.run(
-        ["git", "diff", diff_target, "--", path],
+        ["git", "diff", *(git_args or []), diff_target, "--", path],
         check=False,
         capture_output=True,
         text=True,
@@ -150,6 +150,7 @@ def diff_filtered(
     *,
     diff_target: str = "main",
     line_patterns: list[str],
+    git_args: list[str] | None = None,
 ) -> int:
     """
     Print a filtered diff for a file, based on regex patterns matched against changed lines.
@@ -159,7 +160,7 @@ def diff_filtered(
     Returns the number of matching lines printed.
     """
     result = subprocess.run(
-        ["git", "diff", diff_target, "--", path],
+        ["git", "diff", *(git_args or []), diff_target, "--", path],
         check=False,
         capture_output=True,
         text=True,

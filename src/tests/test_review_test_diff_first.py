@@ -30,11 +30,11 @@ def test_cmd_review_test_diff_first_shows_filtered_diff_before_full_diff(monkeyp
 
     calls: list[tuple[str, object]] = []
 
-    def fake_diff_filtered(path, *, diff_target, line_patterns):
+    def fake_diff_filtered(path, *, diff_target, line_patterns, git_args=None):
         calls.append(("diff_filtered", (path, diff_target, tuple(line_patterns))))
         return 1
 
-    def fake_diff_lines(path, diff_target="main"):
+    def fake_diff_lines(path, diff_target="main", git_args=None):
         calls.append(("diff_lines", (path, diff_target)))
         return []
 
@@ -164,7 +164,7 @@ def test_cmd_review_preview_approve_marks_reviewed_without_showing_full_diff(mon
         def do_reset(self, _state): pass
         def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
-    def fake_diff_filtered(path, *, diff_target, line_patterns):
+    def fake_diff_filtered(path, *, diff_target, line_patterns, git_args=None):
         calls.append(("diff_filtered", (path, diff_target, tuple(line_patterns))))
         return 1
 
@@ -249,7 +249,7 @@ def test_cmd_review_prompt_peek_opens_url_then_marks_reviewed(monkeypatch):
         def do_reset(self, _state): pass
         def add_preapproved_block(self, _state, *, path, start_line, end_line, notes=""): pass
 
-    def fake_diff_lines(path, diff_target="main"):
+    def fake_diff_lines(path, diff_target="main", git_args=None):
         calls.append(("diff_lines", (path, diff_target)))
         return []
 

@@ -40,6 +40,16 @@ def get_review_test_diff_first_default(config: Dict) -> bool:
     value = review.get("test_diff_first_default")
     return value is True
 
+def get_diff_git_args(config: Dict) -> list[str]:
+    """Extra args spliced into every `git diff` invocation (e.g. ["--ignore-all-space"])."""
+    diff = config.get("diff")
+    if not isinstance(diff, dict):
+        return []
+    args = diff.get("git_args")
+    if not isinstance(args, list) or not all(isinstance(a, str) for a in args):
+        return []
+    return args
+
 def resolve_cmd_from_config_aliases(cmd: str, config: Dict) -> List[str]:
     aliases = config.get("aliases")
     if aliases:

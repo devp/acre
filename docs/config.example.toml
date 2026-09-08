@@ -42,3 +42,9 @@ test_diff_patterns = [
   "^[[:space:]]*(async[[:space:]]+def|def)[[:space:]]+test_",
   "assert[A-Za-z_]*\\b",
 ]
+
+# Extra args spliced into every `git diff` invocation used for review/preapprove.
+# Any git-diff flag works, not just whitespace: -w/--ignore-all-space,
+# --ignore-space-change, --ignore-blank-lines, etc.
+[diff]
+git_args = ["--ignore-all-space"]

@@ -1,6 +1,7 @@
 import argparse
 
 from cli.context import Context
+from lib.config.config import get_diff_git_args
 from lib.hunk_filter import _strip_ansi
 from lib.sources.git import diff_lines
 
@@ -84,7 +85,7 @@ def impl(args: argparse.Namespace, context: Context):
 
     if mode == "hunk":
         assert hunk_num is not None
-        lines = diff_lines(path, diff_target=state.diff_target())
+        lines = diff_lines(path, diff_target=state.diff_target(), git_args=get_diff_git_args(context.config))
         start_line, end_line = _find_hunk_range(lines, hunk_num)
         if start_line is None or end_line is None:
             print(f"Hunk {hunk_num} not found in diff for {path}")
@@ -100,7 +101,7 @@ def impl(args: argparse.Namespace, context: Context):
     if start_line is None:
         start_line = 1
     if end_line is None:
-        lines = diff_lines(path, diff_target=state.diff_target())
+        lines = diff_lines(path, diff_target=state.diff_target(), git_args=get_diff_git_args(context.config))
         end_line = len(lines)
     notes: str = args.notes or ""
     context.state_manager.add_preapproved_block(

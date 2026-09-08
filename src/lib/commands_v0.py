@@ -5,7 +5,7 @@ from hashlib import sha256
 
 from cli.pretty import print_whimsically, progress_bar
 from cli.util import mark_reviewed_prompt, open_url, yn
-from lib.config.config import get_review_test_diff_patterns, get_review_test_file_patterns
+from lib.config.config import get_diff_git_args, get_review_test_diff_patterns, get_review_test_file_patterns
 from lib.commands.preapprove import _find_hunk_range, _parse_range_arg
 from lib.diff_filter import excluded_diff_line_numbers, filter_diff_lines
 from lib.hunk_filter import _strip_ansi, filter_diff_hunks_by_regex
@@ -161,6 +161,7 @@ class CommandsV0:
                         path,
                         diff_target=self.state.diff_target(),
                         line_patterns=diff_patterns,
+                        git_args=get_diff_git_args(self.config),
                     )
                     if printed == 0:
                         print("(no matches)")
@@ -176,7 +177,7 @@ class CommandsV0:
 
         def _render_diff() -> None:
             file_state = self.state.files.get(path)
-            lines = diff_lines(path, diff_target=self.state.diff_target())
+            lines = diff_lines(path, diff_target=self.state.diff_target(), git_args=get_diff_git_args(self.config))
 
             if focus_regex:
                 lines = filter_diff_hunks_by_regex(
@@ -236,7 +237,7 @@ class CommandsV0:
                 return
             if mode_p == "hunk":
                 assert hunk_num is not None
-                all_lines = diff_lines(path, diff_target=current_state.diff_target())
+                all_lines = diff_lines(path, diff_target=current_state.diff_target(), git_args=get_diff_git_args(self.config))
                 s, e = _find_hunk_range(all_lines, hunk_num)
                 if s is None or e is None:
                     print(f"Hunk {hunk_num} not found")
@@ -247,7 +248,7 @@ class CommandsV0:
             else:
                 s = start_line_p if start_line_p is not None else 1
                 if end_line_p is None:
-                    all_lines = diff_lines(path, diff_target=current_state.diff_target())
+                    all_lines = diff_lines(path, diff_target=current_state.diff_target(), git_args=get_diff_git_args(self.config))
                     e = len(all_lines)
                 else:
                     e = end_line_p
