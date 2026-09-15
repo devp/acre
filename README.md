@@ -120,8 +120,8 @@ One of:
 
 ## Roadmap / TODOs
 
+- `docs/plans/worktrees-and-primitives.md`
 - `1.0`: a version I'm confident that others can use
-    - [ ] enh: autocomplete for cli
     - [ ] doc: explain my code review philosophy (and give context to this script)
     - [ ] doc: quickstart
 
