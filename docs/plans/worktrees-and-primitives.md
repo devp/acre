@@ -40,102 +40,81 @@ GH; acre's job is getting into a focused, explorable checkout fast. Phase 1 deci
 ### Decided
 
 - `acre` must be run inside the target repo. No repo discovery, no layout assumptions.
-- `<pr-ref>` = `123` | `#123` | `owner/repo#123` | `https://github.com/owner/repo/pull/123`.
-  Slug/URL forms must match the current repo's `gh repo view --json nameWithOwner`; mismatch →
-  error. (gh would otherwise fetch a foreign PR into this repo.)
-- Worktrees at `<main-root>/.acre-worktrees/pr-<N>`, configurable via `[worktree] dir`;
-  `/<dir>/` written to `.git/info/exclude`.
-- `open` execs `interactive -y`. No `overview`; run it on demand.
-- `close` in scope: removes the worktree, keeps the local branch.
-- Force-pushed PR on reopen → surface gh's error, hint `acre open <N> --force` (passes
-  `--force` to gh, resets the local branch). Never reset implicitly.
+- `<pr-ref>` = `123` | `#123` | `https://github.com/owner/repo/pull/123`. URL owner/repo must
+  match `gh repo view --json nameWithOwner`; mismatch → error (gh would otherwise fetch a
+  foreign PR into this repo). Slug form lives only in `acre-start.sh`.
+- Worktrees at `<main-root>/.acre-worktrees/pr-<N>`, hardcoded. On first use, write
+  `.acre-worktrees/.gitignore` containing `*` (uv's venv trick; verified: `git status` clean in
+  main and worktree). Nothing outside the dir is touched.
+- `open` runs `interactive -y` in the worktree. No `overview`; run it on demand.
+- `close` removes the worktree, keeps the local branch.
+- Errors from gh/git (existing unregistered path, force-pushed PR, branch checked out
+  elsewhere, dirty tree on remove) are surfaced as-is, no custom handling. Force-pushed PR:
+  message hints `gh pr checkout <N> --force` inside the worktree.
 - Built in a separate `../acre-next` worktree with `alias acre-next=…/acre-next/src/codereview.py`.
-  The live `acre` alias (`~/.zshrc:46`) points at this checkout's `main` and stays untouched
+  The live `acre` alias (`~/.zshrc:46`) runs this checkout's working tree and stays untouched
   until Phase 1 merges. `acre-start.sh` keeps working throughout.
 
-### Key decision: re-exec, don't refactor startup
+### Mechanics
 
-`src/codereview.py:19-28` builds `StateManager` and resolves `review_id` **before** argparse
-dispatch, bound to the original cwd. `open` therefore provisions, then
-`os.execv(sys.executable, [python, abspath(argv[0]), "interactive", "-y"])` with cwd = worktree.
-`main()` untouched; on re-entry `StateManager._get_git_dir` (`state.py:36-52`) puts state in
-`.git/worktrees/pr-N/acre/`. Traps: take `abspath(argv[0])` **before** `chdir`; flush
-stdout/stderr before `execv`.
+**Main root:** `git rev-parse --path-format=absolute --git-common-dir` → `<main>/.git`, take
+its parent. Verified from inside a linked worktree. (`get_repo_root()` returns the *current*
+worktree, so it can't be used.)
 
-### Provisioning: one gh call
+**Provision:** `gh pr checkout <N> --worktree <abs-path>`, `cwd=main_root` (gh ≥ 2.102).
+Verified in a scratch clone of `octocat/Hello-World`: fork PR lands on a real local branch so
+`gh pr view` still infers the PR (`initialize.py:31` → `github.py:10` unchanged); rerun on an
+existing worktree fetches + fast-forwards (reopen = refresh); works from inside another worktree.
 
-`gh pr checkout <N> --worktree <abs-path> [--force]` (gh ≥ 2.102 verified). Verified in a
-scratch clone of `octocat/Hello-World`:
-- fork PR → fetches `refs/pull/N/head` onto a real local branch → `gh pr view` inside the
-  worktree still infers the PR (`initialize.py:31` → `github.py:10` needs no change);
-- rerun on an existing worktree → fetch + fast-forward, exit 0 (reopen = refresh);
-- run from inside another worktree with an absolute path → works;
-- PR's branch already checked out elsewhere (e.g. your own PR in the main checkout) → gh
-  refuses. Surface its message; review your own PR in place.
+**Enter:** `subprocess.run([sys.executable, abspath(argv[0]), "interactive", "-y"], cwd=path)`.
+`src/codereview.py:19-28` binds `StateManager`/`review_id` to cwd before dispatch, so a
+child process with the worktree as cwd gets `branch-<head>` and state in
+`.git/worktrees/pr-N/acre/` via `StateManager._get_git_dir` (`state.py:36-52`). `main()` untouched.
 
-Path is always absolute and anchored on the main checkout: `get_repo_root()` returns the
-*current* worktree, so use `git worktree list --porcelain` (first `worktree ` line = main,
-absolute; verified). `--git-common-dir` returns relative `.git` — unsuitable.
-
-Path exists but isn't a registered worktree → error with `git worktree prune` hint.
-
-### Teardown
-
-`acre close [<pr-ref>] [--force]`; PR inferred from cwd path when omitted. `git worktree
-remove` already refuses a dirty tree — surface its message, hint `--force`. `chdir(main_root)`
-before removing; print `cd <main_root>` hint on stderr (parent shell is left in a deleted cwd).
-Confirm prompt names the progress loss. Branch kept.
+**Close:** `git -C <main> worktree remove <path>`, then a `cd <main>` hint on stderr.
 
 ### Files
 
 | File | Change |
 |---|---|
-| `src/lib/sources/git.py` | `_parse_worktree_list_porcelain`, `list_worktrees`, `get_main_worktree_root`, `worktree_remove`. |
-| `src/lib/sources/github.py` | `pr_checkout_worktree(pr_number, path, *, force)`, `repo_name_with_owner()`. |
-| `src/lib/worktree.py` *(new, pure)* | `parse_pr_ref`, `worktree_path_for_pr`, `pr_number_from_path`, `ensure_worktree_ignored`. |
+| `src/lib/sources/git.py` | `get_main_worktree_root`, `worktree_remove`. |
+| `src/lib/sources/github.py` | `pr_checkout_worktree(pr_number, path)`, `repo_name_with_owner()`. |
+| `src/lib/worktree.py` *(new, pure)* | `parse_pr_ref`, `worktree_path_for_pr`; commit 3 adds `pr_number_from_path`. |
 | `src/lib/commands/worktree.py` *(new)* | `impl_open`, `impl_close`, `register` — shaped like `simple_commands.py:89-110`. |
-| `src/lib/config/config.py` | `get_worktree_dir(config)`, `DEFAULT_WORKTREE_DIR = ".acre-worktrees"`, validate-or-fall-back like `get_diff_git_args` (`:41-49`). |
 | `src/cli/parser.py` | register in `_build_argparse()`. Not in `interactive.py` → CLI-only. |
-| `docs/config.example.toml` | `[worktree] dir` block. |
 
-`init` untouched: `open` execs `interactive -y`, whose auto-init (`interactive.py:99-105`)
-calls `cmd_init`.
+`init` untouched: `interactive -y` auto-inits (`interactive.py:99-105`).
 
 ### Thin `acre-start.sh`
 
 Parses `<repo> <N>` | `owner/repo#N` | URL → `cd "${ACRE_REPOS_ROOT:-$HOME/code/reviews}/<repo>"`
-→ `exec "$acre" open <pr-ref>`. Missing dir → error with a `gh repo clone` hint. Dirty
-checks, default-branch checkout, `pull`, `init`, `overview` all go — `open` covers them or
-they're no longer needed. Default root preserves today's layout.
+→ `exec "$acre" open <N>`. Missing dir → error with a `gh repo clone` hint. Dirty checks,
+default-branch checkout, `pull`, `init`, `overview` all go. Default root preserves today's layout.
 
 ### Commits
 
-1. **`feat(worktree): resolve main checkout, worktree dir, PR refs`** — git.py resolvers,
-   config accessor, `lib/worktree.py`, config docs. No user-visible surface.
-2. **`feat: acre open <pr-ref> provisions a worktree`** — the payload.
-3. **`feat: acre close removes a PR worktree`**.
-4. *(after 1–3 merge to main)* **`enh: thin acre-start onto acre open`** + README command
-   table, `git clean -xdf` caveat.
+1. **`feat: acre open <pr-ref> provisions a worktree`** — helpers + command.
+2. **`feat: acre close <N> removes a PR worktree`**.
+3. **`enh: acre close infers the PR from cwd`** — `pr_number_from_path`.
+4. *(after 1–3 merge to main)* **`enh: thin acre-start onto acre open`** + README command table.
 
 ### Tests
 
 | File | Covers |
 |---|---|
-| `test_worktree_main_root.py` | porcelain parse on a 3-worktree blob → main first. |
-| `test_worktree_pr_ref.py` | all four ref forms; slug/URL repo mismatch → error; garbage → error. |
-| `test_worktree_path.py` | `[worktree] dir` honored, garbage falls back; `pr_number_from_path` round-trip, `None` outside. |
-| `test_worktree_exclude.py` | appends once, preserves contents, fixes missing trailing newline. |
-| `test_worktree_open.py` | monkeypatched `subprocess.run`/`os.execv`: gh called with abs path + `cwd=main_root`, `--force` only when asked; gh failure → `SystemExit`, no exec. |
-| `test_worktree_close.py` | chdir before remove; `--force` passthrough; inferred PR from cwd. |
+| `test_worktree_pr_ref.py` | `N`, `#N`, URL; URL repo mismatch → error; garbage → error. |
+| `test_worktree_open.py` | monkeypatched `subprocess.run`: gh gets abs path + `cwd=main_root`; gh failure → `SystemExit`, no interactive child. |
+| `test_worktree_path.py` *(commit 3)* | `pr_number_from_path` round-trip; `None` outside `.acre-worktrees`. |
 
 **By hand:**
 ```sh
 acre-next open <N>                  # interactive in .acre-worktrees/pr-N
-git -C <main> status                # untouched
+git -C <main> status                # clean
 acre-next open <other-N>            # concurrent second PR
-acre-next open <url>                # same as above via URL; foreign-repo URL → error
+acre-next open <url>                # via URL; foreign-repo URL → error
 acre-next open <N>                  # reopen → ff refresh, state preserved
-acre-next close <N>                 # confirm, cd hint
+acre-next close <N>                 # removed, cd hint
+cd .acre-worktrees/pr-<N> && acre-next close   # commit 3
 ```
 
 ---
@@ -303,7 +282,7 @@ and by-hand checks are listed under Phase 1; Phase 2's are re-planned if it's pi
 
 - Review progress dies with the worktree. Chosen — `acre close` then reopening starts over.
 - `git clean -xdf` in the main checkout now deletes worktrees. README caveat only.
-- `os.execv` breaks under a zipapp/PyInstaller build. Not in play (hatchling + a plain script).
+- Worktree dir name is hardcoded; config added only if a repo collides with it.
 - A PR whose branch is checked out elsewhere (your own PR in the main checkout) can't be
   opened in a worktree. Review it in place.
 
