@@ -119,6 +119,49 @@ cd .acre-worktrees/pr-<N> && acre-next close   # commit 3
 
 ---
 
+## Phase 1b — sync "viewed" with GitHub, per file
+
+Light, file-level only: acre's reviewed flag ↔ GH's per-file "Viewed" checkbox. Viewed state
+is private to the viewer, so pushing it affects no one else. Independent of worktrees; lands
+after Phase 1. Side effect: progress survives `close` → `open`, softening the "progress dies
+with the worktree" cost.
+
+### GitHub surface
+
+No `gh pr` subcommand; GraphQL only:
+- `markFileAsViewed` / `unmarkFileAsViewed`, input `{pullRequestId, path}`.
+- Read: `pullRequest.files(first:100){nodes{path viewerViewedState} pageInfo{…}}` —
+  `VIEWED` | `UNVIEWED` | `DISMISSED` (viewed, then the file changed). Paginate via
+  `gh api graphql --paginate` with `$endCursor`.
+- Pass `path` with **`-f`** (raw string), not `-F`. Verified in `gh api --help`: `-F` converts
+  `true`/`false`/`null`/integers and reads `@file`, so a path like `123` or `@foo` would be
+  mangled.
+- Mutations need the PR node id: one `gh pr view N --json id` at init, stored in
+  `state.metadata["pr_node_id"]` (metadata is a free-form dict; no schema change).
+
+### Behavior
+
+- **Push:** acre marks a file reviewed (`commands_v0.py:268`, skim mark-all `review.py:85`)
+  → `markFileAsViewed`. `unapprove` → `unmarkFileAsViewed`. `reset` stays local.
+- **Pull:** at `init` only, files `VIEWED` on GH → marked reviewed in acre. `UNVIEWED` and
+  `DISMISSED` never unmark anything acre has. No pull per prompt.
+- Only when `metadata["pr_number"]` exists; git-range reviews skip.
+- gh failure → one-line warning on stderr; the local mark always wins and is never blocked.
+
+### Commits
+
+1. **`feat(github): read and set per-file viewed state`** — helpers in `sources/github.py`; test asserts `-f path=` and pagination args.
+2. **`feat: push reviewed marks to GitHub viewed state`**.
+3. **`feat: init pulls GitHub viewed files as reviewed`**.
+
+### Open
+
+- Default on, or opt-in via config? Lean default-on: private state, no flag to remember.
+- Push latency: one `gh api` round-trip per mark inside the interactive loop. Sync call first;
+  measure before considering a background process.
+
+---
+
 ## Phase 2 — primitives + skill *(deferred)*
 
 Revisit only if inline code-review-skim in a worktree leaves you wanting marks shared with a
@@ -280,7 +323,8 @@ and by-hand checks are listed under Phase 1; Phase 2's are re-planned if it's pi
 
 ## Costs, stated
 
-- Review progress dies with the worktree. Chosen — `acre close` then reopening starts over.
+- Review progress dies with the worktree. Chosen — `acre close` then reopening starts over
+  (until Phase 1b pulls GH viewed state back in at init).
 - `git clean -xdf` in the main checkout now deletes worktrees. README caveat only.
 - Worktree dir name is hardcoded; config added only if a repo collides with it.
 - A PR whose branch is checked out elsewhere (your own PR in the main checkout) can't be
@@ -288,4 +332,4 @@ and by-hand checks are listed under Phase 1; Phase 2's are re-planned if it's pi
 
 ## Open
 
-- None for Phase 1.
+- None for Phase 1. Phase 1b has its own.
